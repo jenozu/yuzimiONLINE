@@ -1,0 +1,159 @@
+import { useState, useMemo } from "react";
+import { ProductCard } from "../components/ProductCard";
+import { MOCK_PRODUCTS } from "../types";
+import { motion } from "motion/react";
+import { Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+
+export function Collections() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialCategory = searchParams.get("category") || "All";
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("featured");
+
+  const categories = ["All", "Apparel", "Prints", "Gear", "Home"];
+
+  const handleCategoryChange = (cat: string) => {
+    setSelectedCategory(cat);
+    if (cat === "All") {
+      searchParams.delete("category");
+      setSearchParams(searchParams);
+    } else {
+      setSearchParams({ category: cat });
+    }
+  };
+
+  const filteredProducts = useMemo(() => {
+    return MOCK_PRODUCTS.filter((product) => {
+      const matchesCategory =
+        selectedCategory === "All" ||
+        product.category.toLowerCase().includes(selectedCategory.toLowerCase());
+
+      const matchesSearch =
+        searchQuery === "" ||
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+      return matchesCategory && matchesSearch;
+    }).sort((a, b) => {
+      if (sortBy === "price-low") return a.price - b.price;
+      if (sortBy === "price-high") return b.price - a.price;
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      return 0; // featured
+    });
+  }, [selectedCategory, searchQuery, sortBy]);
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 space-y-12">
+      {/* Header Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="card-brutal bg-cherry p-8 md:p-14 border-4 border-charcoal shadow-[8px_8px_0px_0px_#141414] space-y-4"
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="badge-brutal bg-white text-charcoal font-black">
+            CATALOG PROTOCOL
+          </span>
+          <span className="text-xs font-black uppercase tracking-widest text-charcoal/70">
+            <span className="normal-case"><span className="lowercase">yuzimi</span>ONLINE</span> // ALL REGISTERED UNITS
+          </span>
+        </div>
+
+        <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter text-charcoal leading-[0.88]">
+          Seasonal <span className="bg-white px-3 py-0.5 border-3 border-charcoal inline-block shadow-[4px_4px_0px_0px_#141414]">Drops</span>
+        </h1>
+
+        <p className="text-sm md:text-base font-bold text-charcoal/80 max-w-xl leading-relaxed">
+          Tactical utility silhouettes synthesized with organic cherry blossom tones and sky blue anime lighting. Built in Tokyo, deployed globally.
+        </p>
+      </motion.div>
+
+      {/* Control Bar: Categories, Search, Sort */}
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b-4 border-charcoal pb-6">
+          {/* Categories */}
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => handleCategoryChange(cat)}
+                className={`text-xs font-black uppercase tracking-wider px-5 py-2.5 border-3 border-charcoal transition-all ${
+                  selectedCategory.toLowerCase() === cat.toLowerCase()
+                    ? "bg-cherry text-charcoal shadow-[4px_4px_0px_0px_#141414] translate-x-0.5 translate-y-0.5"
+                    : "bg-white text-charcoal hover:bg-cherry/30 shadow-[2px_2px_0px_0px_#141414]"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Search & Sort Controls */}
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            {/* Search Input */}
+            <div className="relative flex-1 md:w-64">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="FILTER SPECS..."
+                className="w-full bg-white border-3 border-charcoal px-4 py-2 text-xs font-black uppercase placeholder:text-charcoal/40 outline-none shadow-[3px_3px_0px_0px_#141414] focus:border-cherry"
+              />
+              <Search className="w-4 h-4 text-charcoal/50 absolute right-3 top-2.5" />
+            </div>
+
+            {/* Sort Select */}
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="appearance-none bg-white border-3 border-charcoal px-4 py-2 pr-9 text-xs font-black uppercase outline-none shadow-[3px_3px_0px_0px_#141414] cursor-pointer"
+              >
+                <option value="featured">Sort: Featured</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="name">Alphabetical</option>
+              </select>
+              <ArrowUpDown className="w-3.5 h-3.5 text-charcoal absolute right-3 top-3 pointer-events-none" />
+            </div>
+          </div>
+        </div>
+
+        {/* Results count */}
+        <div className="flex justify-between items-center text-xs font-black uppercase tracking-wider text-charcoal/60">
+          <span>Displaying {filteredProducts.length} verified item{filteredProducts.length === 1 ? "" : "s"}</span>
+          <span>Tokyo Standard Distribution</span>
+        </div>
+      </div>
+
+      {/* Grid */}
+      {filteredProducts.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
+          {filteredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-20 p-8 border-4 border-dashed border-charcoal/30 bg-white space-y-4">
+          <p className="text-3xl font-black uppercase tracking-tight text-charcoal">
+            No matching units found
+          </p>
+          <p className="text-sm font-semibold text-charcoal/60 max-w-sm mx-auto">
+            No active drop matches "{searchQuery}". Clear your search query or reset category filter.
+          </p>
+          <button
+            onClick={() => {
+              setSearchQuery("");
+              setSelectedCategory("All");
+            }}
+            className="btn-brutal text-xs py-3 px-6"
+          >
+            Reset Filters
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

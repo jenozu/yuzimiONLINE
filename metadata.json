@@ -1,0 +1,6 @@
+{
+  "name": "Sakura Sky E-Commerce",
+  "description": "A minimalist e-commerce layout inspired by anime aesthetics, featuring cherry blossoms and clear sky design tokens.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

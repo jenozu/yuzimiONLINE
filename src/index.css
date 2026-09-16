@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-canvas: #FFF4F7;
+  --color-sky-blue: #89CFF0;
+  --color-sky-dark: #60B7E5;
+  --color-sky-light: #EEF8FD;
+  --color-cherry: #FFB7C5;
+  --color-cherry-dark: #FF96AD;
+  --color-cherry-light: #FFF0F4;
+  --color-cherry-soft: #FFE6EC;
+  --color-survey-green: #24352D;
+  --color-charcoal: #141414;
+  
+  --shadow-brutal: 5px 5px 0px 0px #141414;
+  --shadow-brutal-large: 8px 8px 0px 0px #141414;
+  --shadow-brutal-pink: 6px 6px 0px 0px #FFB7C5;
+  --shadow-brutal-blue: 6px 6px 0px 0px #89CFF0;
+}
+
+@layer base {
+  body {
+    @apply bg-canvas text-charcoal font-sans antialiased;
+  }
+}
+
+@layer components {
+  .btn-brutal {
+    @apply bg-cherry text-charcoal px-8 py-4 font-black uppercase tracking-tight border-3 border-charcoal shadow-[4px_4px_0px_0px_#141414] transition-all hover:bg-sky-blue hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_#141414] active:translate-x-1 active:translate-y-1 active:shadow-none;
+  }
+
+  .btn-sky {
+    @apply bg-sky-blue text-charcoal px-8 py-4 font-black uppercase tracking-tight border-3 border-charcoal shadow-[4px_4px_0px_0px_#141414] transition-all hover:bg-cherry hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_#141414] active:translate-x-1 active:translate-y-1 active:shadow-none;
+  }
+
+  .btn-white {
+    @apply bg-white text-charcoal px-8 py-4 font-black uppercase tracking-tight border-3 border-charcoal shadow-[4px_4px_0px_0px_#141414] transition-all hover:bg-cherry hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_#141414] active:translate-x-1 active:translate-y-1 active:shadow-none;
+  }
+  
+  .card-brutal {
+    @apply bg-white border-3 border-charcoal shadow-[6px_6px_0px_0px_#FFB7C5] transition-all hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_#141414];
+  }
+  
+  .nav-brutal {
+    @apply bg-white border-3 border-charcoal shadow-[5px_5px_0px_0px_#FFB7C5] px-8 py-3;
+  }
+  
+  .badge-brutal {
+    @apply bg-cherry text-charcoal px-3 py-1 text-[10px] font-black uppercase tracking-wider border-2 border-charcoal;
+  }
+
+  .badge-sky {
+    @apply bg-sky-blue text-charcoal px-3 py-1 text-[10px] font-black uppercase tracking-wider border-2 border-charcoal;
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .animate-marquee {
+    animation: marquee 22s linear infinite;
+  }
+}
