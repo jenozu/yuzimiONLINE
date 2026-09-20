@@ -21,18 +21,18 @@ export function Navbar() {
       {/* Top Sakura Ribbon */}
       <div className="bg-cherry border-b-2 border-charcoal py-1.5 px-4 text-center text-[11px] font-black uppercase tracking-widest text-charcoal flex items-center justify-center gap-2">
         <Sparkles className="w-3.5 h-3.5 fill-charcoal" />
-        <span>Spring Sakura Drop // <span className="normal-case"><span className="lowercase">yuzimi</span>ONLINE</span> Primary Pink Collection Live // Free Dispatch Over $150</span>
+        <span>Spring Sakura Drop // <span className="normal-case"><span className="lowercase">yuzimi</span>ONLINE</span> Primary Pink Collection Live // Free Shipping on All Orders (USA Only)</span>
         <Sparkles className="w-3.5 h-3.5 fill-charcoal" />
       </div>
 
       <nav className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-3">
-        <div className="nav-brutal flex justify-between items-center h-16 sm:h-20 bg-white">
-          <div className="flex items-center gap-8">
-            <Link to="/" className="text-2xl sm:text-3xl font-black tracking-tighter not-italic flex items-center gap-2.5 group">
-              <span className="w-8 h-8 sm:w-9 sm:h-9 bg-cherry border-2 border-charcoal flex items-center justify-center font-black text-xs shadow-[2px_2px_0px_0px_#141414] group-hover:bg-sky-blue transition-colors">
+        <div className="nav-brutal !px-3 sm:!px-8 !py-2 sm:!py-3 flex justify-between items-center min-h-16 sm:h-20 bg-white gap-2">
+          <div className="flex items-center gap-2 sm:gap-8 min-w-0">
+            <Link to="/" className="text-lg sm:text-3xl font-black tracking-tighter not-italic flex items-center gap-1.5 sm:gap-2.5 group min-w-0">
+              <span className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 bg-cherry border-2 border-charcoal flex items-center justify-center font-black text-xs shadow-[2px_2px_0px_0px_#141414] group-hover:bg-sky-blue transition-colors">
                 桜
               </span>
-              <span className="not-italic">
+              <span className="not-italic whitespace-nowrap">
                 <span className="lowercase">yuzimi</span><span className="text-cherry-dark uppercase not-italic">ONLINE</span>
               </span>
             </Link>
@@ -65,7 +65,7 @@ export function Navbar() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <form 
               onSubmit={handleSearchSubmit}
               className="hidden sm:flex items-center border-2 border-charcoal bg-white h-10 px-3 gap-2 shadow-[2px_2px_0px_0px_#FFB7C5] focus-within:shadow-[3px_3px_0px_0px_#141414] transition-all"
@@ -83,16 +83,16 @@ export function Navbar() {
             <button
               onClick={openCart}
               aria-label="Open cart"
-              className="bg-cherry hover:bg-sky-blue px-3 sm:px-4 py-2 border-2 border-charcoal font-black text-xs uppercase shadow-[3px_3px_0px_0px_#141414] active:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all flex items-center gap-2 text-charcoal cursor-pointer"
+              className="bg-cherry hover:bg-sky-blue px-2.5 sm:px-4 h-11 border-2 border-charcoal font-black text-[10px] sm:text-xs uppercase whitespace-nowrap shadow-[3px_3px_0px_0px_#141414] active:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all flex items-center gap-2 text-charcoal cursor-pointer"
             >
-              <ShoppingCart className="w-3.5 h-3.5" />
+              <ShoppingCart className="hidden sm:block w-3.5 h-3.5" />
               <span>Cart ({totalCount.toString().padStart(2, "0")})</span>
             </button>
 
             <button
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open navigation menu"
-              className="p-2 md:hidden border-2 border-charcoal bg-white shadow-[2px_2px_0px_0px_#FFB7C5] active:translate-x-0.5 active:translate-y-0.5"
+              className="w-11 h-11 shrink-0 md:hidden border-2 border-charcoal bg-white shadow-[2px_2px_0px_0px_#FFB7C5] active:translate-x-0.5 active:translate-y-0.5 grid place-items-center"
             >
               <Menu className="w-5 h-5 text-charcoal" />
             </button>

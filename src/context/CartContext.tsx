@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
-import { Product, CartItem, MOCK_PRODUCTS } from "../types";
+import { Product, CartItem } from "../types";
 
 interface CartContextType {
   items: CartItem[];
@@ -24,19 +24,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  // Pre-seed with 2 items matching the header's initial aesthetic
-  const [items, setItems] = useState<CartItem[]>([
-    {
-      product: MOCK_PRODUCTS[1], // Zenith Blue Hoodie
-      size: "M",
-      quantity: 1
-    },
-    {
-      product: MOCK_PRODUCTS[0], // Sakura Horizon Print
-      size: "L",
-      quantity: 1
-    }
-  ]);
+  const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [wishlist, setWishlist] = useState<string[]>(["1", "2"]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -52,7 +40,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
 
-  const addToCart = (product: Product, size = "M") => {
+  const addToCart = (product: Product, size = "8 × 10 in") => {
     setItems((prev) => {
       const existingIndex = prev.findIndex(
         (item) => item.product.id === product.id && item.size === size

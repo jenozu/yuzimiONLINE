@@ -1,15 +1,26 @@
 import { useParams, Link } from "react-router-dom";
 import { useProducts } from "../hooks/useProducts";
 import { motion } from "motion/react";
-import { Star, ArrowLeft, Heart, Share2, ShieldCheck, Truck, Check } from "lucide-react";
+import { Star, ArrowLeft, Heart, Share2, ShieldCheck, Truck, PackageCheck } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "../context/CartContext";
+
+const PRINT_SIZES = [
+  "5 × 7 in",
+  "8 × 10 in",
+  "11 × 14 in",
+  "12 × 18 in",
+  "16 × 20 in",
+  "18 × 24 in",
+  "20 × 30 in",
+  "24 × 36 in",
+] as const;
 
 export function ProductDetail() {
   const { id } = useParams();
   const { products, loading } = useProducts();
   const product = products.find(p => p.id === id);
-  const [selectedSize, setSelectedSize] = useState("M");
+  const [selectedSize, setSelectedSize] = useState<(typeof PRINT_SIZES)[number]>(PRINT_SIZES[0]);
   const { addToCart, openCart, toggleWishlist, isWishlisted, showToast } = useCart();
 
   const galleryImages = product?.additionalImages && product.additionalImages.length > 0
@@ -143,16 +154,16 @@ export function ProductDetail() {
           
           <div className="space-y-8 border-t-3 border-charcoal pt-8">
             <div className="space-y-3">
-              <div className="flex justify-between items-center max-w-xs">
-                <span className="text-xs font-black uppercase tracking-[0.2em] text-charcoal/60">Select Size</span>
-                <span className="text-[11px] font-bold text-charcoal/50">True to Asian street-fit</span>
+              <div className="flex justify-between items-center gap-4">
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-charcoal/60">Select Print Size</span>
+                <span className="text-[11px] font-bold text-charcoal/50 text-right">Fine-art print dimensions</span>
               </div>
-              <div className="flex gap-4">
-                {["S", "M", "L", "XL"].map((size) => (
+              <div className="grid grid-cols-4 gap-2 sm:gap-3">
+                {PRINT_SIZES.map((size) => (
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`w-14 h-14 border-3 border-charcoal font-black flex items-center justify-center transition-all cursor-pointer ${
+                    className={`min-w-0 min-h-12 px-1.5 py-2 border-3 border-charcoal text-[10px] sm:text-xs font-black leading-tight flex items-center justify-center text-center transition-all cursor-pointer ${
                       selectedSize === size 
                         ? "bg-cherry text-charcoal translate-x-0.5 translate-y-0.5 shadow-[2px_2px_0px_0px_#141414]" 
                         : "bg-white text-charcoal hover:bg-cherry/30 shadow-[4px_4px_0px_0px_#141414] active:shadow-none"
@@ -183,14 +194,21 @@ export function ProductDetail() {
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-5 pt-8 border-t-3 border-dashed border-charcoal/20">
-            <div className="p-6 border-3 border-charcoal bg-[#FFF2F5] shadow-[4px_4px_0px_0px_#FFB7C5]">
-              <p className="text-[11px] font-black uppercase tracking-widest mb-1 text-charcoal">🌸 Free Shipping</p>
-              <p className="text-xs text-charcoal/70 font-semibold">On verified drops over $150 worldwide</p>
+          <div className="grid grid-cols-3 gap-2 sm:gap-5 pt-8 border-t-3 border-dashed border-charcoal/20">
+            <div className="p-3 sm:p-5 border-3 border-charcoal bg-[#FFF2F5] shadow-[3px_3px_0px_0px_#FFB7C5]">
+              <Truck className="w-5 h-5 mb-2" aria-hidden="true" />
+              <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wide sm:tracking-widest mb-1 text-charcoal">Free U.S. Shipping</p>
+              <p className="text-[10px] sm:text-xs leading-snug text-charcoal/70 font-semibold">Every U.S. order, no minimum.</p>
             </div>
-            <div className="p-6 border-3 border-charcoal bg-[#EEF8FD] shadow-[4px_4px_0px_0px_#89CFF0]">
-              <p className="text-[11px] font-black uppercase tracking-widest mb-1 text-charcoal">⚡ Auth Guaranteed</p>
-              <p className="text-xs text-charcoal/70 font-semibold">Certified botanical anime originals</p>
+            <div className="p-3 sm:p-5 border-3 border-charcoal bg-[#EEF8FD] shadow-[3px_3px_0px_0px_#89CFF0]">
+              <ShieldCheck className="w-5 h-5 mb-2" aria-hidden="true" />
+              <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wide sm:tracking-widest mb-1 text-charcoal">Secure Checkout</p>
+              <p className="text-[10px] sm:text-xs leading-snug text-charcoal/70 font-semibold">Your payment details stay protected.</p>
+            </div>
+            <div className="p-3 sm:p-5 border-3 border-charcoal bg-white shadow-[3px_3px_0px_0px_#141414]">
+              <PackageCheck className="w-5 h-5 mb-2" aria-hidden="true" />
+              <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wide sm:tracking-widest mb-1 text-charcoal">Quality Prints</p>
+              <p className="text-[10px] sm:text-xs leading-snug text-charcoal/70 font-semibold">Carefully printed and packed for you.</p>
             </div>
           </div>
         </motion.div>
