@@ -12,6 +12,7 @@ import { Archive } from "./pages/Archive";
 import { Support } from "./pages/Support";
 import { Legal } from "./pages/Legal";
 import { ProductDetail } from "./pages/ProductDetail";
+import { Admin } from "./pages/Admin";
 import { CartProvider } from "./context/CartContext";
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
     <CartProvider>
       <Router>
         <Routes>
+          <Route path="/admin" element={<Admin />} />
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="collections" element={<Collections />} />
@@ -29,7 +31,6 @@ export default function App() {
             <Route path="terms" element={<Legal />} />
             <Route path="security" element={<Legal />} />
             <Route path="product/:id" element={<ProductDetail />} />
-            {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
