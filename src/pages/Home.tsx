@@ -2,15 +2,16 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Hero } from "../components/Hero";
 import { ProductCard } from "../components/ProductCard";
-import { MOCK_PRODUCTS } from "../types";
+import { useProducts } from "../hooks/useProducts";
 import { Sparkles, Compass, Truck, ArrowRight } from "lucide-react";
 
 export function Home() {
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const { products, loading, error } = useProducts();
 
   const filteredProducts = selectedCategory === "All"
-    ? MOCK_PRODUCTS
-    : MOCK_PRODUCTS.filter(p => {
+    ? products
+    : products.filter(p => {
         const cat = p.category.toLowerCase();
         if (selectedCategory === "Prints") return cat.includes("print");
         if (selectedCategory === "Apparel") return cat.includes("apparel");
@@ -53,6 +54,9 @@ export function Home() {
           </div>
         </div>
         
+        {loading && <p className="mb-8 text-sm font-black uppercase tracking-widest">Loading live catalog…</p>}
+        {error && <p role="alert" className="mb-8 border-3 border-charcoal bg-red-100 p-4 font-bold">{error}</p>}
+        {!loading && !error && filteredProducts.length === 0 && <p className="mb-8 border-3 border-charcoal bg-white p-8 text-center font-black uppercase">No published products yet.</p>}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-16">
           {filteredProducts.map((product, idx) => (
             <div key={product.id}>

@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { MOCK_PRODUCTS } from "../types";
+import { useProducts } from "../hooks/useProducts";
 import { motion } from "motion/react";
 import { Star, ArrowLeft, Heart, Share2, ShieldCheck, Truck, Check } from "lucide-react";
 import { useState } from "react";
@@ -7,7 +7,8 @@ import { useCart } from "../context/CartContext";
 
 export function ProductDetail() {
   const { id } = useParams();
-  const product = MOCK_PRODUCTS.find(p => p.id === id);
+  const { products, loading } = useProducts();
+  const product = products.find(p => p.id === id);
   const [selectedSize, setSelectedSize] = useState("M");
   const { addToCart, openCart, toggleWishlist, isWishlisted, showToast } = useCart();
 
@@ -16,6 +17,10 @@ export function ProductDetail() {
     : product ? [product.image, product.image, product.image, product.image] : [];
 
   const [activeImage, setActiveImage] = useState(product?.image || "");
+
+  if (loading) {
+    return <div className="max-w-4xl mx-auto px-4 py-24 text-center font-black uppercase tracking-widest">Loading product…</div>;
+  }
 
   if (!product) {
     return (

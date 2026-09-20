@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { ProductCard } from "../components/ProductCard";
-import { MOCK_PRODUCTS } from "../types";
+import { useProducts } from "../hooks/useProducts";
 import { motion } from "motion/react";
 import { Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
@@ -11,6 +11,7 @@ export function Collections() {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
+  const { products, loading, error } = useProducts();
 
   const categories = ["All", "Apparel", "Prints", "Gear", "Home"];
 
@@ -25,7 +26,7 @@ export function Collections() {
   };
 
   const filteredProducts = useMemo(() => {
-    return MOCK_PRODUCTS.filter((product) => {
+    return products.filter((product) => {
       const matchesCategory =
         selectedCategory === "All" ||
         product.category.toLowerCase().includes(selectedCategory.toLowerCase());
@@ -42,7 +43,7 @@ export function Collections() {
       if (sortBy === "name") return a.name.localeCompare(b.name);
       return 0; // featured
     });
-  }, [selectedCategory, searchQuery, sortBy]);
+  }, [products, selectedCategory, searchQuery, sortBy]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 space-y-12">
@@ -129,7 +130,11 @@ export function Collections() {
       </div>
 
       {/* Grid */}
-      {filteredProducts.length > 0 ? (
+      {loading ? (
+        <div className="py-20 text-center font-black uppercase tracking-widest">Loading live catalog…</div>
+      ) : error ? (
+        <div role="alert" className="border-3 border-charcoal bg-red-100 p-8 font-bold">{error}</div>
+      ) : filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
