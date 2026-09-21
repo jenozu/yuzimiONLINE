@@ -17,6 +17,11 @@ export function Collections() {
         product.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }).sort((a, b) => {
+      if (sortBy === "bestsellers") {
+        const aIsBestseller = a.badge?.toLowerCase() === "bestseller" ? 1 : 0;
+        const bIsBestseller = b.badge?.toLowerCase() === "bestseller" ? 1 : 0;
+        return bIsBestseller - aIsBestseller;
+      }
       if (sortBy === "price-low") return a.price - b.price;
       if (sortBy === "price-high") return b.price - a.price;
       if (sortBy === "name") return a.name.localeCompare(b.name);
@@ -75,6 +80,7 @@ export function Collections() {
                 className="appearance-none bg-white border-3 border-charcoal px-4 py-2 pr-9 text-xs font-black uppercase outline-none shadow-[3px_3px_0px_0px_#141414] cursor-pointer"
               >
                 <option value="featured">Sort: Featured</option>
+                <option value="bestsellers">Bestsellers</option>
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
                 <option value="name">Alphabetical</option>
@@ -85,9 +91,8 @@ export function Collections() {
         </div>
 
         {/* Results count */}
-        <div className="flex justify-between items-center text-xs font-black uppercase tracking-wider text-charcoal/60">
-          <span>Displaying {filteredProducts.length} verified item{filteredProducts.length === 1 ? "" : "s"}</span>
-          <span>Tokyo Standard Distribution</span>
+        <div className="text-xs font-black uppercase tracking-wider text-charcoal/60">
+          <span>Displaying {filteredProducts.length} item{filteredProducts.length === 1 ? "" : "s"}</span>
         </div>
       </div>
 
