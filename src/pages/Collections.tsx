@@ -2,48 +2,27 @@ import { useState, useMemo } from "react";
 import { ProductCard } from "../components/ProductCard";
 import { useProducts } from "../hooks/useProducts";
 import { motion } from "motion/react";
-import { Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
+import { Search, ArrowUpDown } from "lucide-react";
 
 export function Collections() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const initialCategory = searchParams.get("category") || "All";
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
   const { products, loading, error } = useProducts();
 
-  const categories = ["All", "Apparel", "Prints", "Gear", "Home"];
-
-  const handleCategoryChange = (cat: string) => {
-    setSelectedCategory(cat);
-    if (cat === "All") {
-      searchParams.delete("category");
-      setSearchParams(searchParams);
-    } else {
-      setSearchParams({ category: cat });
-    }
-  };
-
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      const matchesCategory =
-        selectedCategory === "All" ||
-        product.category.toLowerCase().includes(selectedCategory.toLowerCase());
-
-      const matchesSearch =
+      return (
         searchQuery === "" ||
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase());
-
-      return matchesCategory && matchesSearch;
+        product.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }).sort((a, b) => {
       if (sortBy === "price-low") return a.price - b.price;
       if (sortBy === "price-high") return b.price - a.price;
       if (sortBy === "name") return a.name.localeCompare(b.name);
       return 0; // featured
     });
-  }, [products, selectedCategory, searchQuery, sortBy]);
+  }, [products, searchQuery, sortBy]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 space-y-12">
@@ -55,42 +34,25 @@ export function Collections() {
       >
         <div className="flex flex-wrap items-center gap-3">
           <span className="badge-brutal bg-white text-charcoal font-black">
-            CATALOG PROTOCOL
+            ART PRINT ARCHIVE
           </span>
           <span className="text-xs font-black uppercase tracking-widest text-charcoal/70">
-            <span className="normal-case"><span className="lowercase">yuzimi</span>ONLINE</span> // ALL REGISTERED UNITS
+            <span className="normal-case"><span className="lowercase">yuzimi</span>ONLINE</span> // COLLECTION 001
           </span>
         </div>
 
         <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter text-charcoal leading-[0.88]">
-          Seasonal <span className="bg-white px-3 py-0.5 border-3 border-charcoal inline-block shadow-[4px_4px_0px_0px_#141414]">Drops</span>
+          Collection 001 — <span className="bg-white px-3 py-0.5 border-3 border-charcoal inline-block shadow-[4px_4px_0px_0px_#141414]">Cherry Blossoms</span>
         </h1>
 
         <p className="text-sm md:text-base font-bold text-charcoal/80 max-w-xl leading-relaxed">
-          Tactical utility silhouettes synthesized with organic cherry blossom tones and sky blue anime lighting. Built in Tokyo, deployed globally.
+          An art-print series inspired by the fleeting beauty and quiet strength of sakura season. Created to bring the soft glow of spring into your space all year round.
         </p>
       </motion.div>
 
-      {/* Control Bar: Categories, Search, Sort */}
+      {/* Control Bar: Search and Sort */}
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b-4 border-charcoal pb-6">
-          {/* Categories */}
-          <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => handleCategoryChange(cat)}
-                className={`text-xs font-black uppercase tracking-wider px-5 py-2.5 border-3 border-charcoal transition-all ${
-                  selectedCategory.toLowerCase() === cat.toLowerCase()
-                    ? "bg-cherry text-charcoal shadow-[4px_4px_0px_0px_#141414] translate-x-0.5 translate-y-0.5"
-                    : "bg-white text-charcoal hover:bg-cherry/30 shadow-[2px_2px_0px_0px_#141414]"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
+        <div className="flex justify-end border-b-4 border-charcoal pb-6">
           {/* Search & Sort Controls */}
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             {/* Search Input */}
@@ -146,16 +108,13 @@ export function Collections() {
             No matching units found
           </p>
           <p className="text-sm font-semibold text-charcoal/60 max-w-sm mx-auto">
-            No active drop matches "{searchQuery}". Clear your search query or reset category filter.
+            No art print matches "{searchQuery}". Try a different title or clear your search.
           </p>
           <button
-            onClick={() => {
-              setSearchQuery("");
-              setSelectedCategory("All");
-            }}
+            onClick={() => setSearchQuery("")}
             className="btn-brutal text-xs py-3 px-6"
           >
-            Reset Filters
+            Clear Search
           </button>
         </div>
       )}
