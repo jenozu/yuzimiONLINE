@@ -331,7 +331,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     console.error(error);
     const message = error instanceof Error ? error.message : 'Unexpected server error.';
-    const status = message.includes('required') || message.includes('must be') || message.includes('Invalid') || message.includes('exceeds') ? 400 : 500;
+    const status = message.includes('required') || message.includes('must be') || message.includes('Invalid') || message.includes('exceeds') || message.includes('Enter a valid') ? 400 : 500;
     return res.status(status).json({ error: message });
   }
 }

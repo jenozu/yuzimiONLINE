@@ -22,5 +22,15 @@ CREATE TABLE IF NOT EXISTS product_images (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS product_variants (
+  id text PRIMARY KEY,
+  product_id text NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  size text NOT NULL,
+  price_cents integer NOT NULL CHECK (price_cents >= 0),
+  position integer NOT NULL DEFAULT 0,
+  UNIQUE (product_id, size)
+);
+
 CREATE INDEX IF NOT EXISTS products_status_created_idx ON products (status, created_at DESC);
 CREATE INDEX IF NOT EXISTS product_images_product_idx ON product_images (product_id, position);
+CREATE INDEX IF NOT EXISTS product_variants_product_idx ON product_variants (product_id, position);
