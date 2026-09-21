@@ -6,13 +6,13 @@ import { useState } from "react";
 import { useCart } from "../context/CartContext";
 
 const PRINT_SIZES = [
-  "5 × 7 in",
   "8 × 10 in",
   "11 × 14 in",
   "12 × 18 in",
   "16 × 20 in",
   "18 × 24 in",
   "20 × 30 in",
+  "24 × 32 in",
   "24 × 36 in",
 ] as const;
 
@@ -183,7 +183,7 @@ export function ProductDetail() {
                 onClick={handleAddToCart}
                 className="btn-brutal flex-grow text-xl py-5 hover:bg-sky-blue transition-colors cursor-pointer"
               >
-                Secure to Cart
+                Add to Cart
               </button>
               <button 
                 onClick={() => toggleWishlist(product.id)}

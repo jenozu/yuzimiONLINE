@@ -7,13 +7,13 @@ const COOKIE_NAME = 'yuzimi_admin_session';
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const PRINT_SIZES = [
-  '5 × 7 in',
   '8 × 10 in',
   '11 × 14 in',
   '12 × 18 in',
   '16 × 20 in',
   '18 × 24 in',
   '20 × 30 in',
+  '24 × 32 in',
   '24 × 36 in',
 ] as const;
 
@@ -79,19 +79,19 @@ function mapProduct(row: any) {
     url: `/api/products/image?key=${encodeURIComponent(String(image.object_key || ''))}`,
   }));
   const storedVariants = typeof row.variants === 'string' ? JSON.parse(row.variants) : (row.variants ?? []);
-  const variants = storedVariants.length
-    ? storedVariants.map((variant: any) => ({
-        size: String(variant.size),
-        price_cents: Number(variant.price_cents),
-        price: Number(variant.price_cents) / 100,
-        position: Number(variant.position),
-      }))
-    : PRINT_SIZES.map((size, position) => ({
-        size,
-        price_cents: Number(row.price_cents),
-        price: Number(row.price_cents) / 100,
-        position,
-      }));
+  const variants = PRINT_SIZES.map((size, position) => {
+    const stored = storedVariants.find((variant: any) => String(variant.size) === size);
+    const largePrintFallback = size === '24 × 32 in'
+      ? storedVariants.find((variant: any) => String(variant.size) === '24 × 36 in')
+      : undefined;
+    const priceCents = Number(stored?.price_cents ?? largePrintFallback?.price_cents ?? row.price_cents);
+    return {
+      size,
+      price_cents: priceCents,
+      price: priceCents / 100,
+      position,
+    };
+  });
   const basePriceCents = variants.length ? Math.min(...variants.map((variant: any) => variant.price_cents)) : Number(row.price_cents);
   return {
     id: row.id,
