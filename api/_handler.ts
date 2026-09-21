@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { neon } from '@neondatabase/serverless';
 import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 
@@ -73,7 +73,11 @@ function ensureSchema(): Promise<void> {
 }
 
 function mapProduct(row: any) {
-  const images = typeof row.images === 'string' ? JSON.parse(row.images) : (row.images ?? []);
+  const storedImages = typeof row.images === 'string' ? JSON.parse(row.images) : (row.images ?? []);
+  const images = storedImages.map((image: any) => ({
+    ...image,
+    url: `/api/products/image?key=${encodeURIComponent(String(image.object_key || ''))}`,
+  }));
   const storedVariants = typeof row.variants === 'string' ? JSON.parse(row.variants) : (row.variants ?? []);
   const variants = storedVariants.length
     ? storedVariants.map((variant: any) => ({
@@ -263,6 +267,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ authenticated: false });
     }
     if (req.method === 'GET' && route === 'admin/session') return res.status(200).json({ authenticated: authenticated(req) });
+    if (req.method === 'GET' && route === 'products/image') {
+      const objectKey = typeof req.query.key === 'string' ? req.query.key : '';
+      if (!objectKey.startsWith('products/') || objectKey.includes('..')) {
+        return res.status(400).json({ error: 'Invalid image key.' });
+      }
+      try {
+        const object = await r2Client().send(new GetObjectCommand({
+          Bucket: env('R2_BUCKET_NAME'),
+          Key: objectKey,
+        }));
+        if (!object.Body) return res.status(404).json({ error: 'Image not found.' });
+        const bytes = await (object.Body as any).transformToByteArray();
+        res.setHeader('Content-Type', object.ContentType || 'application/octet-stream');
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        if (object.ETag) res.setHeader('ETag', object.ETag);
+        return res.status(200).send(Buffer.from(bytes));
+      } catch (error: any) {
+        if (error?.name === 'NoSuchKey' || error?.$metadata?.httpStatusCode === 404) {
+          return res.status(404).json({ error: 'Image not found.' });
+        }
+        throw error;
+      }
+    }
     if (req.method === 'GET' && route === 'products') return res.status(200).json({ products: await queryProducts('published') });
     if (req.method === 'GET' && path[0] === 'products' && path[1]) {
       const products = await queryProducts('published');
@@ -281,7 +308,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const original = typeof req.headers['x-file-name'] === 'string' ? req.headers['x-file-name'] : 'image';
       const objectKey = `products/${randomUUID()}-${safeFileName(original)}`;
       await r2Client().send(new PutObjectCommand({ Bucket: env('R2_BUCKET_NAME'), Key: objectKey, Body: body, ContentType: contentType }));
-      return res.status(201).json({ url: `${env('R2_PUBLIC_URL').replace(/\/$/, '')}/${objectKey}`, object_key: objectKey });
+      return res.status(201).json({ url: `/api/products/image?key=${encodeURIComponent(objectKey)}`, object_key: objectKey });
     }
 
     if (req.method === 'DELETE' && route === 'admin/upload') {
