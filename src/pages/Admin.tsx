@@ -20,6 +20,20 @@ import {
 
 type ProductStatus = "draft" | "published";
 
+const PRINT_SIZES = [
+  "5 × 7 in",
+  "8 × 10 in",
+  "11 × 14 in",
+  "12 × 18 in",
+  "16 × 20 in",
+  "18 × 24 in",
+  "20 × 30 in",
+  "24 × 36 in",
+] as const;
+
+type VariantDraft = { size: string; price: string };
+type ProductVariant = { size: string; price_cents: number; price: number; position: number };
+
 type ProductImage = {
   id?: string;
   url: string;
@@ -39,6 +53,7 @@ type AdminProduct = {
   badge?: string;
   status: ProductStatus;
   images: ProductImage[];
+  variants?: ProductVariant[];
 };
 
 type ProductDraft = {
@@ -46,7 +61,7 @@ type ProductDraft = {
   title: string;
   slug: string;
   description: string;
-  price: string;
+  variants: VariantDraft[];
   category: string;
   badge: string;
   status: ProductStatus;
@@ -57,7 +72,7 @@ const emptyDraft = (): ProductDraft => ({
   title: "",
   slug: "",
   description: "",
-  price: "",
+  variants: PRINT_SIZES.map((size) => ({ size, price: "" })),
   category: "Prints",
   badge: "",
   status: "draft",
@@ -76,7 +91,11 @@ const productToDraft = (product: AdminProduct): ProductDraft => ({
   title: product.title,
   slug: product.slug,
   description: product.description,
-  price: (product.price_cents / 100).toFixed(2),
+  variants: PRINT_SIZES.map((size) => {
+    const variant = product.variants?.find((item) => item.size === size);
+    const priceCents = variant?.price_cents ?? product.price_cents;
+    return { size, price: (priceCents / 100).toFixed(2) };
+  }),
   category: product.category,
   badge: product.badge || "",
   status: product.status,
@@ -179,6 +198,13 @@ export function Admin() {
     setDraft((current) => current ? { ...current, [key]: value } : current);
   };
 
+  const updateVariantPrice = (size: string, price: string) => {
+    setDraft((current) => current ? {
+      ...current,
+      variants: current.variants.map((variant) => variant.size === size ? { ...variant, price } : variant),
+    } : current);
+  };
+
   const titleChanged = (value: string) => {
     setDraft((current) => {
       if (!current) return current;
@@ -246,9 +272,17 @@ export function Admin() {
   const saveProduct = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!draft || uploading) return;
-    const price = Number(draft.price);
     if (!draft.title.trim()) return setError("Add a product title.");
-    if (!Number.isFinite(price) || price < 0) return setError("Enter a valid price.");
+    const invalidVariant = draft.variants.find((variant) => {
+      const price = Number(variant.price);
+      return variant.price.trim() === "" || !Number.isFinite(price) || price < 0;
+    });
+    if (invalidVariant) return setError(`Enter a valid price for ${invalidVariant.size}.`);
+    const variants = draft.variants.map((variant, position) => ({
+      size: variant.size,
+      price_cents: Math.round(Number(variant.price) * 100),
+      position,
+    }));
     if (!draft.images.length) return setError("Upload at least one product image.");
 
     setSaving(true);
@@ -258,7 +292,8 @@ export function Admin() {
       title: draft.title.trim(),
       slug: slugify(draft.slug || draft.title),
       description: draft.description.trim(),
-      price_cents: Math.round(price * 100),
+      price_cents: Math.min(...variants.map((variant) => variant.price_cents)),
+      variants,
       currency: "USD",
       category: draft.category.trim() || "Prints",
       badge: draft.badge.trim() || null,
@@ -404,7 +439,7 @@ export function Admin() {
                         <span className={`border-2 border-charcoal px-2 py-1 text-[10px] font-black uppercase ${product.status === "published" ? "bg-sky-blue" : "bg-cherry"}`}>{product.status}</span>
                       </div>
                       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                        <strong>${(product.price_cents / 100).toFixed(2)}</strong>
+                        <strong>From ${(product.price_cents / 100).toFixed(2)}</strong>
                         <div className="flex gap-2">
                           <button onClick={() => editProduct(product)} className="border-2 border-charcoal px-3 py-2 text-xs font-black uppercase hover:bg-sky-blue inline-flex items-center gap-1"><Pencil size={14} /> Edit</button>
                           <button onClick={() => void deleteProduct(product)} className="border-2 border-charcoal p-2 hover:bg-red-200" aria-label={`Delete ${product.title}`}><Trash2 size={16} /></button>
@@ -442,10 +477,25 @@ export function Admin() {
                   <Field label="URL slug" htmlFor="slug" hint="Used in the product web address.">
                     <input id="slug" value={draft.slug} onChange={(event) => updateDraft("slug", slugify(event.target.value))} className="admin-input" placeholder="sakura-horizon-print" />
                   </Field>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field label="Price (USD)" htmlFor="price"><input id="price" type="number" min="0" step="0.01" value={draft.price} onChange={(event) => updateDraft("price", event.target.value)} className="admin-input" placeholder="45.00" required /></Field>
-                    <Field label="Category" htmlFor="category"><input id="category" list="category-options" value={draft.category} onChange={(event) => updateDraft("category", event.target.value)} className="admin-input" /><datalist id="category-options"><option value="Prints" /><option value="Apparel" /><option value="Gear" /><option value="Home" /></datalist></Field>
-                  </div>
+                  <Field label="Category" htmlFor="category"><input id="category" list="category-options" value={draft.category} onChange={(event) => updateDraft("category", event.target.value)} className="admin-input" /><datalist id="category-options"><option value="Prints" /><option value="Apparel" /><option value="Gear" /><option value="Home" /></datalist></Field>
+                  <fieldset>
+                    <legend className="text-xs font-black uppercase tracking-widest">Variant prices (USD)</legend>
+                    <p className="text-xs text-neutral-500 mt-1">Enter the selling price for every print size.</p>
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                      {draft.variants.map((variant) => {
+                        const inputId = `variant-${variant.size.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
+                        return (
+                          <div key={variant.size}>
+                            <label htmlFor={inputId} className="block text-[10px] font-black uppercase tracking-wide mb-1">{variant.size}</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-sm" aria-hidden="true">$</span>
+                              <input id={inputId} type="number" inputMode="decimal" min="0" step="0.01" value={variant.price} onChange={(event) => updateVariantPrice(variant.size, event.target.value)} className="admin-input !pl-7" placeholder="0.00" required aria-label={`${variant.size} price in USD`} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
                   <Field label="Badge (optional)" htmlFor="badge"><input id="badge" value={draft.badge} onChange={(event) => updateDraft("badge", event.target.value)} className="admin-input" placeholder="New / Limited / Bestseller" /></Field>
                   <Field label="Description" htmlFor="description" hint="Write the storefront copy manually—no AI is used.">
                     <textarea id="description" value={draft.description} onChange={(event) => updateDraft("description", event.target.value)} className="admin-input min-h-32 resize-y" placeholder="Materials, sizing, finish, care instructions…" />

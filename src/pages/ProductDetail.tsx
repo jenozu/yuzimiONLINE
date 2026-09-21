@@ -22,6 +22,8 @@ export function ProductDetail() {
   const product = products.find(p => p.id === id);
   const [selectedSize, setSelectedSize] = useState<(typeof PRINT_SIZES)[number]>(PRINT_SIZES[0]);
   const { addToCart, openCart, toggleWishlist, isWishlisted, showToast } = useCart();
+  const selectedVariant = product?.variants?.find((variant) => variant.size === selectedSize);
+  const selectedPrice = selectedVariant?.price ?? product?.price ?? 0;
 
   const galleryImages = product?.additionalImages && product.additionalImages.length > 0
     ? product.additionalImages
@@ -48,7 +50,7 @@ export function ProductDetail() {
   }
 
   const handleAddToCart = () => {
-    addToCart(product, selectedSize);
+    addToCart({ ...product, price: selectedPrice }, selectedSize);
     openCart();
   };
 
@@ -144,7 +146,7 @@ export function ProductDetail() {
             </h1>
             
             <div className="inline-block bg-cherry text-charcoal border-3 border-charcoal px-6 py-2.5 text-2xl md:text-3xl font-black italic shadow-[4px_4px_0px_0px_#141414]">
-              ${product.price.toFixed(2)}
+              ${selectedPrice.toFixed(2)}
             </div>
           </div>
           
@@ -163,6 +165,7 @@ export function ProductDetail() {
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
+                    aria-label={`${size}, ${(product.variants?.find((variant) => variant.size === size)?.price ?? product.price).toFixed(2)} dollars`}
                     className={`min-w-0 min-h-12 px-1.5 py-2 border-3 border-charcoal text-[10px] sm:text-xs font-black leading-tight flex items-center justify-center text-center transition-all cursor-pointer ${
                       selectedSize === size 
                         ? "bg-cherry text-charcoal translate-x-0.5 translate-y-0.5 shadow-[2px_2px_0px_0px_#141414]" 

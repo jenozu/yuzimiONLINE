@@ -6,6 +6,16 @@ import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 const COOKIE_NAME = 'yuzimi_admin_session';
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const PRINT_SIZES = [
+  '5 × 7 in',
+  '8 × 10 in',
+  '11 × 14 in',
+  '12 × 18 in',
+  '16 × 20 in',
+  '18 × 24 in',
+  '20 × 30 in',
+  '24 × 36 in',
+] as const;
 
 type ImageInput = { url: string; object_key?: string; alt?: string };
 
@@ -46,8 +56,17 @@ function ensureSchema(): Promise<void> {
         position integer NOT NULL DEFAULT 0,
         created_at timestamptz NOT NULL DEFAULT now()
       )`;
+      await sql`CREATE TABLE IF NOT EXISTS product_variants (
+        id text PRIMARY KEY,
+        product_id text NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        size text NOT NULL,
+        price_cents integer NOT NULL CHECK (price_cents >= 0),
+        position integer NOT NULL DEFAULT 0,
+        UNIQUE (product_id, size)
+      )`;
       await sql`CREATE INDEX IF NOT EXISTS products_status_created_idx ON products (status, created_at DESC)`;
       await sql`CREATE INDEX IF NOT EXISTS product_images_product_idx ON product_images (product_id, position)`;
+      await sql`CREATE INDEX IF NOT EXISTS product_variants_product_idx ON product_variants (product_id, position)`;
     })();
   }
   return schemaPromise;
@@ -55,19 +74,35 @@ function ensureSchema(): Promise<void> {
 
 function mapProduct(row: any) {
   const images = typeof row.images === 'string' ? JSON.parse(row.images) : (row.images ?? []);
+  const storedVariants = typeof row.variants === 'string' ? JSON.parse(row.variants) : (row.variants ?? []);
+  const variants = storedVariants.length
+    ? storedVariants.map((variant: any) => ({
+        size: String(variant.size),
+        price_cents: Number(variant.price_cents),
+        price: Number(variant.price_cents) / 100,
+        position: Number(variant.position),
+      }))
+    : PRINT_SIZES.map((size, position) => ({
+        size,
+        price_cents: Number(row.price_cents),
+        price: Number(row.price_cents) / 100,
+        position,
+      }));
+  const basePriceCents = variants.length ? Math.min(...variants.map((variant: any) => variant.price_cents)) : Number(row.price_cents);
   return {
     id: row.id,
     slug: row.slug,
     title: row.title,
     name: row.title,
     description: row.description,
-    price_cents: Number(row.price_cents),
-    price: Number(row.price_cents) / 100,
+    price_cents: basePriceCents,
+    price: basePriceCents / 100,
     currency: row.currency,
     category: row.category,
     badge: row.badge || undefined,
     status: row.status,
     images,
+    variants,
     image: images[0]?.url ?? '',
     additionalImages: images.map((image: any) => image.url),
     created_at: row.created_at,
@@ -79,8 +114,14 @@ async function queryProducts(status?: 'draft' | 'published') {
   await ensureSchema();
   const sql = db();
   const rows = status
-    ? await sql`SELECT p.*, COALESCE(json_agg(json_build_object('id', i.id, 'url', i.url, 'object_key', i.object_key, 'alt', i.alt, 'position', i.position) ORDER BY i.position) FILTER (WHERE i.id IS NOT NULL), '[]'::json) AS images FROM products p LEFT JOIN product_images i ON i.product_id = p.id WHERE p.status = ${status} GROUP BY p.id ORDER BY p.created_at DESC`
-    : await sql`SELECT p.*, COALESCE(json_agg(json_build_object('id', i.id, 'url', i.url, 'object_key', i.object_key, 'alt', i.alt, 'position', i.position) ORDER BY i.position) FILTER (WHERE i.id IS NOT NULL), '[]'::json) AS images FROM products p LEFT JOIN product_images i ON i.product_id = p.id GROUP BY p.id ORDER BY p.created_at DESC`;
+    ? await sql`SELECT p.*,
+        COALESCE((SELECT json_agg(json_build_object('id', i.id, 'url', i.url, 'object_key', i.object_key, 'alt', i.alt, 'position', i.position) ORDER BY i.position) FROM product_images i WHERE i.product_id = p.id), '[]'::json) AS images,
+        COALESCE((SELECT json_agg(json_build_object('size', v.size, 'price_cents', v.price_cents, 'position', v.position) ORDER BY v.position) FROM product_variants v WHERE v.product_id = p.id), '[]'::json) AS variants
+      FROM products p WHERE p.status = ${status} ORDER BY p.created_at DESC`
+    : await sql`SELECT p.*,
+        COALESCE((SELECT json_agg(json_build_object('id', i.id, 'url', i.url, 'object_key', i.object_key, 'alt', i.alt, 'position', i.position) ORDER BY i.position) FROM product_images i WHERE i.product_id = p.id), '[]'::json) AS images,
+        COALESCE((SELECT json_agg(json_build_object('size', v.size, 'price_cents', v.price_cents, 'position', v.position) ORDER BY v.position) FROM product_variants v WHERE v.product_id = p.id), '[]'::json) AS variants
+      FROM products p ORDER BY p.created_at DESC`;
   return rows.map(mapProduct);
 }
 
@@ -167,11 +208,29 @@ async function replaceImages(productId: string, images: ImageInput[]) {
   }
 }
 
+async function replaceVariants(productId: string, variants: Array<{ size: string; priceCents: number; position: number }>) {
+  const sql = db();
+  await sql`DELETE FROM product_variants WHERE product_id = ${productId}`;
+  for (const variant of variants) {
+    await sql`INSERT INTO product_variants (id, product_id, size, price_cents, position) VALUES (${randomUUID()}, ${productId}, ${variant.size}, ${variant.priceCents}, ${variant.position})`;
+  }
+}
+
 function normalizeProduct(input: any) {
   const title = String(input.title || '').trim();
-  const priceCents = Number(input.price_cents);
+  const fallbackPriceCents = Number(input.price_cents);
+  const suppliedVariants = Array.isArray(input.variants) ? input.variants : [];
   if (!title) throw new Error('Product title is required.');
-  if (!Number.isInteger(priceCents) || priceCents < 0) throw new Error('price_cents must be a non-negative integer.');
+  if (!suppliedVariants.length && (!Number.isInteger(fallbackPriceCents) || fallbackPriceCents < 0)) {
+    throw new Error('price_cents must be a non-negative integer.');
+  }
+  const variants = PRINT_SIZES.map((size, position) => {
+    const supplied = suppliedVariants.find((variant: any) => String(variant?.size) === size);
+    const priceCents = suppliedVariants.length ? Number(supplied?.price_cents) : fallbackPriceCents;
+    if (!Number.isInteger(priceCents) || priceCents < 0) throw new Error(`Enter a valid price for ${size}.`);
+    return { size, priceCents, position };
+  });
+  const priceCents = Math.min(...variants.map((variant) => variant.priceCents));
   return {
     title,
     slug: slugify(String(input.slug || title)),
@@ -182,6 +241,7 @@ function normalizeProduct(input: any) {
     badge: input.badge ? String(input.badge) : null,
     status: input.status === 'published' ? 'published' : 'draft',
     images: Array.isArray(input.images) ? input.images as ImageInput[] : [],
+    variants,
   };
 }
 
@@ -239,7 +299,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (duplicate.length) return res.status(409).json({ error: 'That product slug already exists.' });
       const id = randomUUID();
       await sql`INSERT INTO products (id, slug, title, description, price_cents, currency, category, badge, status) VALUES (${id}, ${input.slug}, ${input.title}, ${input.description}, ${input.priceCents}, ${input.currency}, ${input.category}, ${input.badge}, ${input.status})`;
-      await replaceImages(id, input.images);
+      await Promise.all([replaceImages(id, input.images), replaceVariants(id, input.variants)]);
       const product = (await queryProducts()).find((item: any) => item.id === id);
       return res.status(201).json({ product });
     }
@@ -260,7 +320,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (duplicate.length) return res.status(409).json({ error: 'That product slug already exists.' });
         const result = await sql`UPDATE products SET slug = ${input.slug}, title = ${input.title}, description = ${input.description}, price_cents = ${input.priceCents}, currency = ${input.currency}, category = ${input.category}, badge = ${input.badge}, status = ${input.status}, updated_at = now() WHERE id = ${id} RETURNING id`;
         if (!result.length) return res.status(404).json({ error: 'Product not found.' });
-        await replaceImages(id, input.images);
+        await Promise.all([replaceImages(id, input.images), replaceVariants(id, input.variants)]);
         const product = (await queryProducts()).find((item: any) => item.id === id);
         return res.status(200).json({ product });
       }

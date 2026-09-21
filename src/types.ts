@@ -7,6 +7,12 @@ export interface Product {
   category: string;
   badge?: string;
   additionalImages?: string[];
+  variants?: Array<{
+    size: string;
+    price_cents: number;
+    price: number;
+    position: number;
+  }>;
 }
 
 export interface CartItem {
