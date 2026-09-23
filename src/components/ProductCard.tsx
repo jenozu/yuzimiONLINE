@@ -60,7 +60,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           <div className="flex justify-between items-center border-t-2 border-charcoal/30 pt-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/60">{["Prints", "Apparel", "Gear", "Home"].includes(product.category) ? product.name : product.category}</span>
             <span className="text-lg font-black italic tracking-tighter bg-white px-2.5 py-0.5 border border-charcoal shadow-[2px_2px_0px_0px_#FFB7C5] text-charcoal">
-              ${product.price.toFixed(2)}+
+              ${Number.isInteger(product.price) ? product.price : product.price.toFixed(2)}+
             </span>
           </div>
         </div>
