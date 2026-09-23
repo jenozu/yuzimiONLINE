@@ -73,7 +73,7 @@ const emptyDraft = (): ProductDraft => ({
   slug: "",
   description: "",
   variants: PRINT_SIZES.map((size) => ({ size, price: "" })),
-  category: "Prints",
+  category: "",
   badge: "",
   status: "draft",
   images: [],
@@ -96,7 +96,7 @@ const productToDraft = (product: AdminProduct): ProductDraft => ({
     const priceCents = variant?.price_cents ?? product.price_cents;
     return { size, price: (priceCents / 100).toFixed(2) };
   }),
-  category: product.category,
+  category: ["Prints", "Apparel", "Gear", "Home"].includes(product.category) ? product.title : product.category,
   badge: product.badge || "",
   status: product.status,
   images: product.images || [],
@@ -295,7 +295,7 @@ export function Admin() {
       price_cents: Math.min(...variants.map((variant) => variant.price_cents)),
       variants,
       currency: "USD",
-      category: draft.category.trim() || "Prints",
+      category: draft.category.trim() || draft.title.trim(),
       badge: draft.badge.trim() || null,
       status: draft.status,
       images: draft.images.map((image, position) => ({
@@ -477,7 +477,7 @@ export function Admin() {
                   <Field label="URL slug" htmlFor="slug" hint="Used in the product web address.">
                     <input id="slug" value={draft.slug} onChange={(event) => updateDraft("slug", slugify(event.target.value))} className="admin-input" placeholder="sakura-horizon-print" />
                   </Field>
-                  <Field label="Category" htmlFor="category"><input id="category" list="category-options" value={draft.category} onChange={(event) => updateDraft("category", event.target.value)} className="admin-input" /><datalist id="category-options"><option value="Prints" /><option value="Apparel" /><option value="Gear" /><option value="Home" /></datalist></Field>
+                  <Field label="Anime / series" htmlFor="category" hint="Shown beneath the print title in the collection."><input id="category" value={draft.category} onChange={(event) => updateDraft("category", event.target.value)} className="admin-input" placeholder="Bayonetta" required /></Field>
                   <fieldset>
                     <legend className="text-xs font-black uppercase tracking-widest">Variant prices (USD)</legend>
                     <p className="text-xs text-neutral-500 mt-1">Enter the selling price for every print size.</p>
