@@ -1,26 +1,15 @@
 import { motion, AnimatePresence } from "motion/react";
-import { X, Trash2, Plus, Minus, ArrowRight, ShieldCheck, ShoppingBag } from "lucide-react";
+import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { Link } from "react-router-dom";
-import { useState } from "react";
 
 export function CartDrawer() {
-  const { items, isOpen, closeCart, removeFromCart, updateQuantity, clearCart, subtotal, totalCount } = useCart();
-  const [isCheckedOut, setIsCheckedOut] = useState(false);
+  const { items, isOpen, closeCart, removeFromCart, updateQuantity, subtotal, totalCount } = useCart();
 
-  const freeShippingThreshold = 150;
-  const shippingCost = subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : 15;
-  const grandTotal = subtotal + shippingCost;
-  const neededForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
-
-  const handleCheckout = () => {
-    setIsCheckedOut(true);
-    setTimeout(() => {
-      clearCart();
-      setIsCheckedOut(false);
-      closeCart();
-    }, 2500);
-  };
+  // Final shipping depends on the customer's address and the number of prints.
+  // Tsuya's published rates: US free; Canada $9.99 + $2.50/additional item;
+  // Europe varies by destination. Do not claim a final total before address entry.
+  const shippingNote = "US: FREE · Canada: $9.99 + $2.50 per extra print · Europe: calculated by country";
 
   return (
     <AnimatePresence>
@@ -68,42 +57,13 @@ export function CartDrawer() {
               </button>
             </div>
 
-            {/* Free shipping bar */}
-            <div className="bg-[#EEF8FD] border-b-3 border-charcoal px-6 py-3">
-              {neededForFreeShipping > 0 ? (
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-[11px] font-black uppercase tracking-wider text-charcoal">
-                    <span>Add ${neededForFreeShipping.toFixed(2)} for Free Dispatch</span>
-                    <span>{Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100))}%</span>
-                  </div>
-                  <div className="w-full bg-white border border-charcoal h-2 overflow-hidden">
-                    <div
-                      className="bg-sky-blue h-full transition-all duration-300"
-                      style={{ width: `${Math.min(100, (subtotal / freeShippingThreshold) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-charcoal">
-                  <span className="w-2 h-2 rounded-full bg-cherry animate-ping inline-block" />
-                  <span>🌸 Qualified for Free Express Worldwide Shipping!</span>
-                </div>
-              )}
+            <div className="bg-[#EEF8FD] border-b-3 border-charcoal px-6 py-3 text-[11px] font-black uppercase tracking-wider text-charcoal">
+              {shippingNote}
             </div>
 
             {/* Cart Items List */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {isCheckedOut ? (
-                <div className="text-center py-16 space-y-4">
-                  <div className="w-16 h-16 bg-cherry border-3 border-charcoal mx-auto flex items-center justify-center shadow-[4px_4px_0px_0px_#141414]">
-                    <ShieldCheck className="w-10 h-10 text-charcoal" />
-                  </div>
-                  <h4 className="text-2xl font-black uppercase tracking-tight text-charcoal">Order Dispatched!</h4>
-                  <p className="text-sm font-medium text-charcoal/70 max-w-xs mx-auto">
-                    Payment protocol initialized. Verification packet sent to your client node.
-                  </p>
-                </div>
-              ) : items.length === 0 ? (
+              {items.length === 0 ? (
                 <div className="text-center py-16 space-y-4">
                   <div className="w-16 h-16 bg-white border-3 border-charcoal mx-auto flex items-center justify-center shadow-[4px_4px_0px_0px_#FFB7C5]">
                     <ShoppingBag className="w-8 h-8 text-charcoal/40" />
@@ -184,7 +144,7 @@ export function CartDrawer() {
             </div>
 
             {/* Footer / Summary */}
-            {items.length > 0 && !isCheckedOut && (
+            {items.length > 0 && (
               <div className="p-6 bg-white border-t-3 border-charcoal space-y-4">
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between font-bold text-charcoal/70">
@@ -192,25 +152,23 @@ export function CartDrawer() {
                     <span>${subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-charcoal/70">
-                    <span>Express Dispatch</span>
-                    <span>{shippingCost === 0 ? "FREE" : `$${shippingCost.toFixed(2)}`}</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-black text-charcoal pt-2 border-t border-charcoal/10">
-                    <span>Grand Total</span>
-                    <span className="bg-cherry text-charcoal px-2 py-0.5 border border-charcoal">
-                      ${grandTotal.toFixed(2)}
-                    </span>
+                    <span>Shipping</span>
+                    <span>Calculated at checkout</span>
                   </div>
                 </div>
 
                 <div className="space-y-2 pt-2">
                   <button
-                    onClick={handleCheckout}
+                    disabled
+                    aria-describedby="checkout-status"
                     className="w-full btn-brutal text-sm py-4 flex items-center justify-center gap-2 hover:bg-sky-blue transition-colors"
                   >
-                    <span>Authorize Checkout</span>
+                    <span>Checkout</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
+                  <p id="checkout-status" className="text-xs text-center text-charcoal/70">
+                    Checkout is being set up. No payment or order is placed yet.
+                  </p>
 
                   <button
                     onClick={closeCart}
