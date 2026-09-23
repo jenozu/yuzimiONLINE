@@ -201,7 +201,7 @@ Everything you need to know about art-print production, shipping, replacements, 
             <div className="space-y-2 border-b-3 border-charcoal pb-4">
               <span className="text-xs font-black uppercase tracking-widest text-cherry-dark">Protocol // 04</span>
               <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-charcoal">
-                Contact Yuzimi
+                Contact Us
               </h2>
             </div>
 
@@ -242,7 +242,7 @@ Everything you need to know about art-print production, shipping, replacements, 
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="OPERATOR@DOMAIN.COM"
+                      placeholder="you@example.com"
                       className="w-full bg-white border-3 border-charcoal p-3 text-xs font-bold uppercase outline-none shadow-[3px_3px_0px_0px_#141414] focus:border-cherry"
                     />
                   </div>
@@ -276,7 +276,7 @@ Everything you need to know about art-print production, shipping, replacements, 
                 </div>
 
                 <button type="submit" className="btn-brutal text-sm py-4 px-8 w-full">
-                  Send Message to <span className="normal-case"><span className="lowercase">yuzimi</span>ONLINE</span>
+                  Send Message
                 </button>
               </form>
             )}
