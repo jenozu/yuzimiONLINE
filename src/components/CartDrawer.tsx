@@ -2,14 +2,28 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, removeFromCart, updateQuantity, subtotal, totalCount } = useCart();
 
-  // Final shipping depends on the customer's address and the number of prints.
-  // Tsuya's published rates: US free; Canada $9.99 + $2.50/additional item;
-  // Europe varies by destination. Do not claim a final total before address entry.
-  const shippingNote = "US: FREE · Canada: $9.99 + $2.50 per extra print · Europe: calculated by country";
+  const [destination, setDestination] = useState("US");
+  const rates: Record<string, [string, number, number]> = {
+    US: ["United States", 0, 0], CA: ["Canada", 9.99, 2.5],
+    GB: ["United Kingdom", 10.89, 5.29],
+    AT: ["Austria", 10.89, 5.29], BE: ["Belgium", 10.89, 5.29],
+    FR: ["France", 10.89, 5.29], DE: ["Germany", 10.89, 5.29],
+    IE: ["Ireland", 10.89, 5.29], IT: ["Italy", 10.89, 5.29],
+    NL: ["Netherlands", 10.89, 5.29], ES: ["Spain", 10.89, 5.29],
+    SE: ["Sweden", 10.89, 5.29],
+    CH: ["Switzerland", 18.39, 5.39], NO: ["Norway", 18.39, 5.39],
+    DK: ["Denmark", 18.39, 5.39], FI: ["Finland", 18.39, 5.39],
+    IS: ["Iceland", 18.39, 5.39], LI: ["Liechtenstein", 18.39, 5.39],
+    LV: ["Latvia", 14.39, 5.39], LT: ["Lithuania", 14.39, 5.39],
+    EE: ["Estonia", 14.39, 5.39],
+  };
+  const [firstItem, additionalItem] = rates[destination].slice(1) as [number, number];
+  const shippingCost = totalCount ? firstItem + (totalCount - 1) * additionalItem : 0;
 
   return (
     <AnimatePresence>
@@ -58,7 +72,7 @@ export function CartDrawer() {
             </div>
 
             <div className="bg-[#EEF8FD] border-b-3 border-charcoal px-6 py-3 text-[11px] font-black uppercase tracking-wider text-charcoal">
-              {shippingNote}
+              US shipping is free. Select your destination below for other rates.
             </div>
 
             {/* Cart Items List */}
@@ -146,6 +160,10 @@ export function CartDrawer() {
             {/* Footer / Summary */}
             {items.length > 0 && (
               <div className="p-6 bg-white border-t-3 border-charcoal space-y-4">
+                <label className="block text-xs font-black uppercase" htmlFor="shipping-destination">Ship to</label>
+                <select id="shipping-destination" value={destination} onChange={(event) => setDestination(event.target.value)} className="w-full border-2 border-charcoal bg-white p-2 text-sm">
+                  {Object.entries(rates).map(([code, [name]]) => <option key={code} value={code}>{name}</option>)}
+                </select>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between font-bold text-charcoal/70">
                     <span>Subtotal</span>
@@ -153,7 +171,11 @@ export function CartDrawer() {
                   </div>
                   <div className="flex justify-between font-bold text-charcoal/70">
                     <span>Shipping</span>
-                    <span>Calculated at checkout</span>
+                    <span>{shippingCost === 0 ? "FREE" : `${shippingCost.toFixed(2)}`}</span>
+                  </div>
+                  <div className="flex justify-between font-black text-charcoal border-t border-charcoal/10 pt-2">
+                    <span>Estimated total</span>
+                    <span>${(subtotal + shippingCost).toFixed(2)}</span>
                   </div>
                 </div>
 
