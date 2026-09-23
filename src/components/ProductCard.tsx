@@ -1,9 +1,7 @@
-import React from "react";
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { Product } from "../types";
-import { useCart } from "../context/CartContext";
 
 export interface ProductCardProps {
   product: Product;
@@ -12,14 +10,6 @@ export interface ProductCardProps {
 }
 
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
-  const { addToCart } = useCart();
-
-  const handleQuickAdd = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addToCart(product, "M");
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -53,14 +43,12 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             </div>
           )}
           
-          <button 
-            type="button"
-            onClick={handleQuickAdd}
-            aria-label={`Add ${product.name} to cart`}
+          <span 
+            aria-hidden="true"
             className="absolute bottom-5 right-5 w-12 h-12 bg-cherry border-2 border-charcoal flex items-center justify-center shadow-[3px_3px_0px_0px_#141414] transition-all hover:bg-sky-blue hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[5px_5px_0px_0px_#141414] active:translate-x-0 active:translate-y-0 text-charcoal cursor-pointer z-10"
           >
             <Plus className="w-6 h-6 stroke-[2.5]" />
-          </button>
+          </span>
         </div>
         
         <div className="space-y-1.5 px-1">
@@ -70,9 +58,9 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             </h3>
           </div>
           <div className="flex justify-between items-center border-t-2 border-charcoal/30 pt-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/60">{product.category}</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/60">{["Prints", "Apparel", "Gear", "Home"].includes(product.category) ? product.name : product.category}</span>
             <span className="text-lg font-black italic tracking-tighter bg-white px-2.5 py-0.5 border border-charcoal shadow-[2px_2px_0px_0px_#FFB7C5] text-charcoal">
-              ${product.price.toFixed(2)}
+              ${product.price.toFixed(2)}+
             </span>
           </div>
         </div>
