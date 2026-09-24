@@ -13,6 +13,7 @@ import { Support } from "./pages/Support";
 import { Legal } from "./pages/Legal";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Admin } from "./pages/Admin";
+import { CheckoutResult } from "./pages/CheckoutResult";
 import { CartProvider } from "./context/CartContext";
 
 export default function App() {
@@ -31,6 +32,8 @@ export default function App() {
             <Route path="terms" element={<Legal />} />
             <Route path="security" element={<Legal />} />
             <Route path="product/:id" element={<ProductDetail />} />
+            <Route path="checkout/success" element={<CheckoutResult />} />
+            <Route path="checkout/cancel" element={<CheckoutResult />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
