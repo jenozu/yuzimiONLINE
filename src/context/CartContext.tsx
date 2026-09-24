@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 import { Product, CartItem } from "../types";
 
 interface CartContextType {
@@ -47,7 +47,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       );
       if (existingIndex > -1) {
         const next = [...prev];
-        next[existingIndex].quantity += 1;
+        next[existingIndex] = { ...next[existingIndex], quantity: next[existingIndex].quantity + 1 };
         return next;
       }
       return [...prev, { product, size, quantity: 1 }];
@@ -77,7 +77,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = useCallback(() => setItems([]), []);
 
   const toggleWishlist = (productId: string) => {
     setWishlist((prev) => {
