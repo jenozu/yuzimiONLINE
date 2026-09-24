@@ -3,27 +3,45 @@ import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { shippingCents } from "../../lib/checkout/shipping";
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, removeFromCart, updateQuantity, subtotal, totalCount } = useCart();
 
   const [destination, setDestination] = useState("US");
-  const rates: Record<string, [string, number, number]> = {
-    US: ["United States", 0, 0], CA: ["Canada", 9.99, 2.5],
-    GB: ["United Kingdom", 10.89, 5.29],
-    AT: ["Austria", 10.89, 5.29], BE: ["Belgium", 10.89, 5.29],
-    FR: ["France", 10.89, 5.29], DE: ["Germany", 10.89, 5.29],
-    IE: ["Ireland", 10.89, 5.29], IT: ["Italy", 10.89, 5.29],
-    NL: ["Netherlands", 10.89, 5.29], ES: ["Spain", 10.89, 5.29],
-    SE: ["Sweden", 10.89, 5.29],
-    CH: ["Switzerland", 18.39, 5.39], NO: ["Norway", 18.39, 5.39],
-    DK: ["Denmark", 18.39, 5.39], FI: ["Finland", 18.39, 5.39],
-    IS: ["Iceland", 18.39, 5.39], LI: ["Liechtenstein", 18.39, 5.39],
-    LV: ["Latvia", 14.39, 5.39], LT: ["Lithuania", 14.39, 5.39],
-    EE: ["Estonia", 14.39, 5.39],
+  const [startingCheckout, setStartingCheckout] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
+  const destinations: Record<string, string> = {
+    US: "United States", CA: "Canada", GB: "United Kingdom",
+    AT: "Austria", BE: "Belgium", FR: "France", DE: "Germany", IE: "Ireland",
+    IT: "Italy", NL: "Netherlands", ES: "Spain", SE: "Sweden",
+    CH: "Switzerland", NO: "Norway", DK: "Denmark", FI: "Finland",
+    IS: "Iceland", LI: "Liechtenstein", LV: "Latvia", LT: "Lithuania", EE: "Estonia",
   };
-  const [firstItem, additionalItem] = rates[destination].slice(1) as [number, number];
-  const shippingCost = totalCount ? firstItem + (totalCount - 1) * additionalItem : 0;
+  const shippingCost = totalCount ? shippingCents(destination, totalCount) / 100 : 0;
+
+  const handleCheckout = async () => {
+    if (startingCheckout) return;
+    setStartingCheckout(true);
+    setCheckoutError("");
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ country: destination, items: items.map(item => ({
+          id: item.product.id, size: item.size, quantity: item.quantity,
+        })) }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "Could not start test checkout.");
+      const url = new URL(body.url);
+      if (url.protocol !== "https:" || url.hostname !== "checkout.stripe.com") throw new Error("Stripe returned an unexpected checkout URL.");
+      window.location.assign(url.toString());
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : "Could not start test checkout.");
+      setStartingCheckout(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -162,7 +180,7 @@ export function CartDrawer() {
               <div className="p-6 bg-white border-t-3 border-charcoal space-y-4">
                 <label className="block text-xs font-black uppercase" htmlFor="shipping-destination">Ship to</label>
                 <select id="shipping-destination" value={destination} onChange={(event) => setDestination(event.target.value)} className="w-full border-2 border-charcoal bg-white p-2 text-sm">
-                  {Object.entries(rates).map(([code, [name]]) => <option key={code} value={code}>{name}</option>)}
+                  {Object.entries(destinations).map(([code, name]) => <option key={code} value={code}>{name}</option>)}
                 </select>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between font-bold text-charcoal/70">
@@ -171,7 +189,7 @@ export function CartDrawer() {
                   </div>
                   <div className="flex justify-between font-bold text-charcoal/70">
                     <span>Shipping</span>
-                    <span>{shippingCost === 0 ? "FREE" : `${shippingCost.toFixed(2)}`}</span>
+                    <span>{shippingCost === 0 ? "FREE" : `$${shippingCost.toFixed(2)}`}</span>
                   </div>
                   <div className="flex justify-between font-black text-charcoal border-t border-charcoal/10 pt-2">
                     <span>Estimated total</span>
@@ -181,16 +199,19 @@ export function CartDrawer() {
 
                 <div className="space-y-2 pt-2">
                   <button
-                    disabled
+                    type="button"
+                    onClick={handleCheckout}
+                    disabled={startingCheckout}
                     aria-describedby="checkout-status"
                     className="w-full btn-brutal text-sm py-4 flex items-center justify-center gap-2 hover:bg-sky-blue transition-colors"
                   >
-                    <span>Checkout</span>
+                    <span>{startingCheckout ? "Opening test checkout…" : "Checkout"}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                   <p id="checkout-status" className="text-xs text-center text-charcoal/70">
-                    Checkout is being set up. No payment or order is placed yet.
+                    Test mode: no real payment will be charged or order fulfilled.
                   </p>
+                  {checkoutError && <p role="alert" className="text-xs text-red-700 font-bold">{checkoutError}</p>}
 
                   <button
                     onClick={closeCart}
