@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import React, { useState } from "react";
 import { Search, ShoppingCart, Menu, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
@@ -10,7 +10,7 @@ export function Navbar() {
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const navigate = useNavigate();
 
-  const handleSearchSubmit = (e: FormEvent) => {
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchQuery(localSearch);
     navigate(`/collections`);

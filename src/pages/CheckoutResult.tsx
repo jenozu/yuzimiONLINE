@@ -41,4 +41,3 @@ export function CheckoutResult() {
     <Link to="/collections" className="inline-block btn-brutal px-6 py-3 text-sm">Browse prints</Link>
   </div>;
 }
-

@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -20,7 +21,6 @@
 
 @layer base {
   body { @apply bg-canvas text-charcoal font-sans antialiased; }
-  :focus-visible { outline: 3px solid #60B7E5; outline-offset: 3px; }
 }
 
 @layer components {
@@ -38,13 +38,4 @@
     100% { transform: translateX(-50%); }
   }
   .animate-marquee { animation: marquee 22s linear infinite; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
 }

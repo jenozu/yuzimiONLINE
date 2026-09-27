@@ -1,11 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureOrdersTable, markPaid, ordersDb } from '../lib/checkout/orders.js';
-import { enforceRateLimit, setApiSecurityHeaders } from '../lib/security.js';
 
 export default async function status(req: VercelRequest, res: VercelResponse) {
-  setApiSecurityHeaders(res);
   if (req.method !== 'GET') return res.status(405).end();
-  if (!enforceRateLimit(req, res, 'checkout-status', 60, 10 * 60 * 1000)) return;
   const id = typeof req.query.session_id === 'string' ? req.query.session_id : '';
   if (!/^cs_test_[a-zA-Z0-9_]+$/.test(id) || id.length > 255) return res.status(400).json({ error: 'Invalid test checkout session.' });
   if (!process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_')) return res.status(503).json({ error: 'Stripe test checkout is not configured.' });
@@ -17,7 +14,6 @@ export default async function status(req: VercelRequest, res: VercelResponse) {
     if (rows[0].status !== 'paid') {
       const response = await fetch(`https://api.stripe.com/v1/checkout/sessions/${id}`, {
         headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
-        signal: AbortSignal.timeout(10_000),
       });
       const session = await response.json() as any;
       if (!response.ok) return res.status(502).json({ error: 'Could not verify payment.' });

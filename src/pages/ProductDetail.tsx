@@ -1,10 +1,9 @@
 import { useParams, Link } from "react-router-dom";
 import { useProducts } from "../hooks/useProducts";
 import { motion } from "motion/react";
-import { ArrowLeft, Heart, Share2, ShieldCheck, Truck, PackageCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Star, ArrowLeft, Heart, Share2, ShieldCheck, Truck, PackageCheck } from "lucide-react";
+import { useState } from "react";
 import { useCart } from "../context/CartContext";
-import { PageMeta } from "../components/PageMeta";
 
 const PRINT_SIZES = [
   "8 × 10 in",
@@ -19,42 +18,21 @@ const PRINT_SIZES = [
 
 export function ProductDetail() {
   const { id } = useParams();
-  const { products, loading, error } = useProducts();
+  const { products, loading } = useProducts();
   const product = products.find(p => p.id === id);
   const [selectedSize, setSelectedSize] = useState<(typeof PRINT_SIZES)[number]>(PRINT_SIZES[0]);
   const { addToCart, openCart, toggleWishlist, isWishlisted, showToast } = useCart();
   const selectedVariant = product?.variants?.find((variant) => variant.size === selectedSize);
   const selectedPrice = selectedVariant?.price ?? product?.price ?? 0;
-  const selectedAvailable = selectedVariant?.available !== false;
 
   const galleryImages = product?.additionalImages && product.additionalImages.length > 0
     ? product.additionalImages
-    : product ? [product.image] : [];
+    : product ? [product.image, product.image, product.image, product.image] : [];
 
   const [activeImage, setActiveImage] = useState(product?.image || "");
 
-  useEffect(() => {
-    if (!product?.variants?.length) return;
-    const current = product.variants.find((variant) => variant.size === selectedSize);
-    if (current?.available !== false) return;
-    const firstAvailable = product.variants.find((variant) => variant.available !== false);
-    if (firstAvailable && PRINT_SIZES.includes(firstAvailable.size as (typeof PRINT_SIZES)[number])) {
-      setSelectedSize(firstAvailable.size as (typeof PRINT_SIZES)[number]);
-    }
-  }, [product, selectedSize]);
-
   if (loading) {
     return <div className="max-w-4xl mx-auto px-4 py-24 text-center font-black uppercase tracking-widest">Loading product…</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-24 text-center space-y-6">
-        <h2 className="text-4xl font-black uppercase text-charcoal">Could not load this print</h2>
-        <p role="alert" className="text-sm font-semibold text-charcoal/60">{error}</p>
-        <Link to="/collections" className="inline-block btn-brutal text-xs py-3 px-6">Return to Collections</Link>
-      </div>
-    );
   }
 
   if (!product) {
@@ -72,10 +50,6 @@ export function ProductDetail() {
   }
 
   const handleAddToCart = () => {
-    if (!selectedAvailable) {
-      showToast("That print size is currently unavailable.");
-      return;
-    }
     addToCart({ ...product, price: selectedPrice }, selectedSize);
     openCart();
   };
@@ -87,12 +61,6 @@ export function ProductDetail() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-      <PageMeta
-        title={product.name}
-        description={product.description || `Shop ${product.name} in eight fine-art print sizes.`}
-        image={product.image}
-        type="product"
-      />
       <div className="flex justify-between items-center mb-12">
         <Link 
           to="/collections" 
@@ -123,8 +91,6 @@ export function ProductDetail() {
               <img 
                 src={activeImage || product.image} 
                 alt={product.name}
-                decoding="async"
-                fetchPriority="high"
                 className="w-full h-full object-cover transition-all duration-300"
               />
               <div className="absolute top-4 left-4">
@@ -152,8 +118,6 @@ export function ProductDetail() {
                   <img 
                     src={img} 
                     alt="" 
-                    loading="lazy"
-                    decoding="async"
                     className="w-full h-full object-cover" 
                   />
                 </div>
@@ -171,7 +135,10 @@ export function ProductDetail() {
           <div className="space-y-6">
             <div className="flex items-center gap-4">
               <span className="badge-brutal bg-cherry text-charcoal">{product.category}</span>
-              <span className="text-xs font-black uppercase bg-white border border-charcoal px-2.5 py-1 shadow-[2px_2px_0px_0px_#89CFF0]">Made to order</span>
+              <div className="flex items-center gap-1.5 bg-white border border-charcoal px-2.5 py-1 shadow-[2px_2px_0px_0px_#89CFF0]">
+                <Star className="w-4 h-4 text-sky-blue fill-sky-blue" />
+                <span className="text-xs font-black text-charcoal">4.9 / 5.0 (Tokyo Spec)</span>
+              </div>
             </div>
             
             <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-[0.88] text-charcoal">
@@ -194,37 +161,29 @@ export function ProductDetail() {
                 <span className="text-[11px] font-bold text-charcoal/50 text-right">Fine-art print dimensions</span>
               </div>
               <div className="grid grid-cols-4 gap-2 sm:gap-3">
-                {PRINT_SIZES.map((size) => {
-                  const variant = product.variants?.find((item) => item.size === size);
-                  const available = variant?.available !== false;
-                  return <button
+                {PRINT_SIZES.map((size) => (
+                  <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    disabled={!available}
-                    aria-label={`${size}, ${(variant?.price ?? product.price).toFixed(2)} dollars${available ? "" : ", unavailable"}`}
-                    className={`min-w-0 min-h-12 px-1.5 py-2 border-3 border-charcoal text-[10px] sm:text-xs font-black leading-tight flex items-center justify-center text-center transition-all ${
-                      !available
-                        ? "bg-neutral-200 text-neutral-500 line-through cursor-not-allowed shadow-none"
-                        : "cursor-pointer " + (
+                    aria-label={`${size}, ${(product.variants?.find((variant) => variant.size === size)?.price ?? product.price).toFixed(2)} dollars`}
+                    className={`min-w-0 min-h-12 px-1.5 py-2 border-3 border-charcoal text-[10px] sm:text-xs font-black leading-tight flex items-center justify-center text-center transition-all cursor-pointer ${
                       selectedSize === size 
                         ? "bg-cherry text-charcoal translate-x-0.5 translate-y-0.5 shadow-[2px_2px_0px_0px_#141414]" 
                         : "bg-white text-charcoal hover:bg-cherry/30 shadow-[4px_4px_0px_0px_#141414] active:shadow-none"
-                        )
                     }`}
                   >
                     {size}
                   </button>
-                })}
+                ))}
               </div>
             </div>
             
             <div className="flex gap-4 pt-2">
               <button 
                 onClick={handleAddToCart}
-                disabled={!selectedAvailable}
-                className="btn-brutal flex-grow text-xl py-5 hover:bg-sky-blue transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-brutal flex-grow text-xl py-5 hover:bg-sky-blue transition-colors cursor-pointer"
               >
-                {selectedAvailable ? "Add to Cart" : "Size Unavailable"}
+                Add to Cart
               </button>
               <button 
                 onClick={() => toggleWishlist(product.id)}
