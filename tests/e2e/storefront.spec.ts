@@ -50,7 +50,7 @@ test("search, variant choice, cart edits, and checkout redirect work", async ({ 
   await page.getByRole("button", { name: "Add to Cart" }).click();
   await expect(page.getByText("Size: 24 × 36 in")).toBeVisible();
   await page.getByRole("button", { name: "Increase quantity" }).click();
-  await expect(page.getByText("$160.00")).toBeVisible();
+  await expect(page.getByText("$160.00").first()).toBeVisible();
   await page.getByRole("button", { name: "Checkout", exact: true }).click();
   await expect(page).toHaveURL(/checkout\.stripe\.com/);
 });
@@ -61,7 +61,7 @@ test("mobile navigation opens and remains keyboard accessible", async ({ page })
   await page.goto("/");
   await page.getByRole("button", { name: "Open navigation menu" }).focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("link", { name: /Collections/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Collections Live", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Close menu" }).click();
   await expect(page.getByRole("button", { name: "Open cart" })).toBeVisible();
 });
