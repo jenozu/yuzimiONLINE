@@ -5,3 +5,4 @@ export default function upload(req: VercelRequest, res: VercelResponse) {
   req.query.path = ['admin', 'upload'];
   return handler(req, res);
 }
+

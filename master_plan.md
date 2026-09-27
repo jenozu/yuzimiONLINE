@@ -16,11 +16,12 @@ Maintain a deployable storefront with production services configured safely.
 - [x] Add a sanitized `.env.example` covering database, storage, admin, and Stripe settings <!-- task:YUZ-M1-006 -->
 - [x] Keep service credentials in Vercel environment variables instead of Git <!-- task:YUZ-M1-007 -->
 - [x] Confirm uploaded R2 images render on the deployed storefront <!-- task:YUZ-M1-008 -->
-- [ ] Document local setup, database setup, deployment, and recovery steps in the repository README <!-- task:YUZ-M1-009 -->
+- [x] Document local setup, database setup, deployment, and recovery steps in the repository README <!-- task:YUZ-M1-009 -->
   - Include required Node version and install, lint, build, and development commands.
   - Explain how to apply the database schema and configure Neon, R2, Stripe, and Vercel without exposing secrets.
 - [ ] Add automated CI for type checking and production builds on every pull request <!-- task:YUZ-M1-010 -->
   - Require the checks to pass before merging to main.
+  - Repository workflow is implemented; complete this after its first green GitHub run and branch protection makes it required.
 
 ## M2: Art-print catalog and admin
 
@@ -38,11 +39,11 @@ Manage the entire print catalog without editing source code or calling an AI ser
 - [x] Use the catalog category field as the anime or series name <!-- task:YUZ-M2-008 -->
 - [x] Remove AI-generated descriptions and keep product copy manually editable <!-- task:YUZ-M2-009 -->
 - [x] Make the admin product form usable on mobile screens <!-- task:YUZ-M2-010 -->
-- [ ] Add inventory or availability controls for each print variant <!-- task:YUZ-M2-011 -->
+- [x] Add inventory or availability controls for each print variant <!-- task:YUZ-M2-011 -->
   - Decide whether variants are unlimited made-to-order, paused, or quantity-limited.
   - Prevent unavailable variants from being added to cart or purchased.
-- [ ] Add an admin order list with payment, fulfillment, and shipping status <!-- task:YUZ-M2-012 -->
-- [ ] Add safe product archiving so historical orders keep their original product details <!-- task:YUZ-M2-013 -->
+- [x] Add an admin order list with payment, fulfillment, and shipping status <!-- task:YUZ-M2-012 -->
+- [x] Add safe product archiving so historical orders keep their original product details <!-- task:YUZ-M2-013 -->
 
 ## M3: Print storefront experience
 
@@ -61,9 +62,9 @@ Present a focused, responsive art-print catalog and product-buying experience.
 - [x] Keep print sizes in a four-by-two grid on supported mobile widths <!-- task:YUZ-M3-009 -->
 - [x] Use “Add to Cart” for the product purchase action <!-- task:YUZ-M3-010 -->
 - [x] Replace apparel-oriented support copy with art-print shipping, returns, care, and FAQ content <!-- task:YUZ-M3-011 -->
-- [ ] Replace remaining placeholder products, mock data, dead links, and temporary copy <!-- task:YUZ-M3-012 -->
+- [x] Replace remaining placeholder products, mock data, dead links, and temporary copy <!-- task:YUZ-M3-012 -->
   - Confirm no non-print mock products appear if the database is empty or unavailable.
-- [ ] Add informative empty, loading, and error states for catalog and product requests <!-- task:YUZ-M3-013 -->
+- [x] Add informative empty, loading, and error states for catalog and product requests <!-- task:YUZ-M3-013 -->
 - [ ] Verify every navigation, footer, support, and legal link on desktop and mobile <!-- task:YUZ-M3-014 -->
 
 ## M4: Cart and Stripe test checkout
@@ -104,6 +105,7 @@ Accept real payments without trusting prices, totals, or payment state supplied 
 - [ ] Add an idempotent event ledger for processed Stripe webhook event IDs <!-- task:YUZ-M5-006 -->
 - [ ] Add admin actions for refund, cancellation, and manual fulfillment review <!-- task:YUZ-M5-007 -->
 - [ ] Define how failed, expired, disputed, refunded, and partially refunded orders change status <!-- task:YUZ-M5-008 -->
+  - Code and schema are implemented for YUZ-M5-004 through YUZ-M5-008; keep them open until deployed Stripe test events and retries verify the behavior.
 - [ ] Test live-mode readiness with Stripe’s production checklist before enabling the live key <!-- task:YUZ-M5-009 -->
 - [ ] Make one controlled low-value live purchase and refund before public launch <!-- task:YUZ-M5-010 -->
 
@@ -114,11 +116,12 @@ Turn paid orders into traceable print production and delivery.
 
 ### Implementation
 - [ ] Choose the print provider and document paper, finish, bleed, color profile, and supported dimensions <!-- task:YUZ-M6-001 -->
-- [ ] Create a print-ready asset naming and storage convention for every product and size <!-- task:YUZ-M6-002 -->
+- [x] Create a print-ready asset naming and storage convention for every product and size <!-- task:YUZ-M6-002 -->
 - [ ] Validate source artwork resolution for all eight print dimensions before publishing <!-- task:YUZ-M6-003 -->
 - [ ] Decide whether fulfillment is manual, provider-API driven, or a staged combination <!-- task:YUZ-M6-004 -->
 - [ ] Prevent fulfillment from starting unless the order is confirmed paid <!-- task:YUZ-M6-005 -->
 - [ ] Record production status, provider order ID, tracking number, and shipment date <!-- task:YUZ-M6-006 -->
+  - Admin transitions and fields are implemented; keep these open until a deployed paid test order completes the workflow.
 - [ ] Add retry and manual-review handling for rejected or failed fulfillment submissions <!-- task:YUZ-M6-007 -->
 - [ ] Complete a physical sample order for every paper/finish combination <!-- task:YUZ-M6-008 -->
 - [ ] Approve packaging, print quality, color accuracy, damage resistance, and unboxing presentation <!-- task:YUZ-M6-009 -->
@@ -152,7 +155,7 @@ Give customers clear confirmations, status updates, and a reliable way to get he
 - [ ] Connect the support/contact form to a monitored inbox with spam protection <!-- task:YUZ-M8-005 -->
 - [ ] Add a customer order lookup or secure order-status link <!-- task:YUZ-M8-006 -->
 - [ ] Finalize FAQ answers for processing time, materials, sizing, shipping regions, returns, and damaged prints <!-- task:YUZ-M8-007 -->
-- [ ] Create support procedures for address changes, damage claims, lost packages, cancellations, and refunds <!-- task:YUZ-M8-008 -->
+- [x] Create support procedures for address changes, damage claims, lost packages, cancellations, and refunds <!-- task:YUZ-M8-008 -->
 
 ## M9: Legal, privacy, and security
 
@@ -169,6 +172,7 @@ Protect customer data and publish policies that match the actual business proces
 - [ ] Restrict upload MIME types, file signatures, dimensions, and size; randomize all object keys <!-- task:YUZ-M9-007 -->
 - [ ] Add security headers and a Content Security Policy compatible with Stripe and R2 images <!-- task:YUZ-M9-008 -->
 - [ ] Review logs and API errors to ensure passwords, cookies, database URLs, and keys are never exposed <!-- task:YUZ-M9-009 -->
+  - The controls for YUZ-M9-005 through YUZ-M9-009 are implemented and locally reviewed; keep them open until production header/log tests and credential rotation are complete.
 - [ ] Back up Neon data and document tested product/order restore procedures <!-- task:YUZ-M9-010 -->
 
 ## M10: Quality, accessibility, and discoverability
@@ -177,14 +181,16 @@ Protect customer data and publish policies that match the actual business proces
 Make the shop reliable, fast, accessible, searchable, and measurable.
 
 ### Implementation
-- [ ] Add unit tests for money math, shipping rules, checkout validation, and order state changes <!-- task:YUZ-M10-001 -->
+- [x] Add unit tests for money math, shipping rules, checkout validation, and order state changes <!-- task:YUZ-M10-001 -->
 - [ ] Add API integration tests for admin authentication, products, uploads, checkout, status, and webhooks <!-- task:YUZ-M10-002 -->
-- [ ] Add browser tests for catalog search, variant choice, cart edits, checkout redirect, and mobile navigation <!-- task:YUZ-M10-003 -->
+- [x] Add browser tests for catalog search, variant choice, cart edits, checkout redirect, and mobile navigation <!-- task:YUZ-M10-003 -->
+  - The suite is CI-ready; local execution is blocked only because this workspace cannot download the Chromium binary.
 - [ ] Test current Chrome, Safari, Firefox, Edge, iOS Safari, and Android Chrome <!-- task:YUZ-M10-004 -->
 - [ ] Complete keyboard, focus, screen-reader, color-contrast, and reduced-motion accessibility review <!-- task:YUZ-M10-005 -->
+  - Focus visibility, form labels, keyboard coverage, and reduced-motion handling are implemented; screen-reader and contrast review remain.
 - [ ] Add responsive image sizes, compression, lazy loading, and stable aspect ratios <!-- task:YUZ-M10-006 -->
 - [ ] Meet agreed Core Web Vitals targets on home, collection, and product pages <!-- task:YUZ-M10-007 -->
-- [ ] Add unique titles, meta descriptions, canonical URLs, Open Graph images, sitemap, and robots directives <!-- task:YUZ-M10-008 -->
+- [x] Add unique titles, meta descriptions, canonical URLs, Open Graph images, sitemap, and robots directives <!-- task:YUZ-M10-008 -->
 - [ ] Add Product and Organization structured data using real catalog values <!-- task:YUZ-M10-009 -->
 - [ ] Configure privacy-conscious analytics for product views, add-to-cart, checkout start, and purchase <!-- task:YUZ-M10-010 -->
 - [ ] Add application error monitoring and alerts for API, database, R2, Stripe, and checkout failures <!-- task:YUZ-M10-011 -->
@@ -198,7 +204,7 @@ Launch deliberately, verify the real buying journey, and keep the store healthy 
 - [ ] Connect the production custom domain and verify HTTPS, redirects, and canonical host behavior <!-- task:YUZ-M11-001 -->
 - [ ] Create a launch inventory with final titles, series, descriptions, alt text, prices, and approved artwork <!-- task:YUZ-M11-002 -->
 - [ ] Run a content proofread and visual QA at common desktop, tablet, and mobile sizes <!-- task:YUZ-M11-003 -->
-- [ ] Complete the prelaunch runbook covering database, storage, Stripe, email, fulfillment, policies, and support <!-- task:YUZ-M11-004 -->
+- [x] Complete the prelaunch runbook covering database, storage, Stripe, email, fulfillment, policies, and support <!-- task:YUZ-M11-004 -->
 - [ ] Run a full production smoke test from landing page through payment, fulfillment, email, and tracking <!-- task:YUZ-M11-005 -->
 - [ ] Publish the store only after the launch checklist and rollback plan are approved <!-- task:YUZ-M11-006 -->
 - [ ] Review orders, failed checkouts, fulfillment exceptions, support inbox, and error alerts daily after launch <!-- task:YUZ-M11-007 -->

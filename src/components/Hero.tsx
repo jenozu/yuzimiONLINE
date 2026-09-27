@@ -45,20 +45,20 @@ export function Hero() {
               </span>
               <span className="inline-flex items-center gap-1 bg-sky-blue text-charcoal border-2 border-charcoal px-2.5 py-0.5 text-[11px] font-black uppercase">
                 <Sparkles className="w-3 h-3 fill-charcoal" />
-                Tokyo Spring
+                Cherry Blossoms
               </span>
             </div>
             
             <h1 className="text-6xl sm:text-7xl md:text-8xl font-black uppercase leading-[0.88] tracking-tighter text-charcoal">
-              Vivid<br />
-              Sakura<br />
+              Cherry<br />
+              Blossom<br />
               <span className="bg-white text-charcoal px-3 py-0.5 border-3 border-charcoal inline-block mt-2 shadow-[4px_4px_0px_0px_#141414]">
-                Utility
+                Prints
               </span>
             </h1>
             
             <p className="text-base sm:text-lg md:text-xl font-bold max-w-md leading-snug text-charcoal/85">
-              Engineered for the anime brutalist aesthetic. Merging high-performance materials with the softness of cherry blossom pink and crisp clear skies.
+              Anime-inspired artwork framed by cherry blossom pink, clear-sky blue, and bold brutalist lines. Available as made-to-order prints in eight sizes.
             </p>
             
             <div className="flex flex-wrap gap-4 pt-2">
@@ -66,7 +66,7 @@ export function Hero() {
                 to="/collections" 
                 className="bg-sky-blue text-charcoal border-3 border-charcoal px-8 py-4 font-black uppercase tracking-tight shadow-[4px_4px_0px_0px_#141414] hover:bg-white hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_#141414] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center gap-2 group text-base sm:text-lg cursor-pointer"
               >
-                <span>Secure Drop</span>
+                <span>Shop Prints</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               
@@ -85,7 +85,10 @@ export function Hero() {
           <div className="w-full h-full border-2 border-dashed border-charcoal/30 flex items-center justify-center -rotate-1 bg-[repeating-linear-gradient(45deg,#FFF0F4,#FFF0F4_12px,#ffffff_12px,#ffffff_24px)] p-4 relative">
             <img 
                src="/src/assets/images/hero_sakura_sky_1779206360576.png"
-               alt="Hero Anime Sakura Sky"
+               alt="Anime-inspired figure beneath pink cherry blossoms and a blue spring sky"
+               decoding="async"
+               fetchPriority="high"
+               sizes="(min-width: 1024px) 40vw, 92vw"
                className="w-full h-full object-cover border-2 border-charcoal shadow-[4px_4px_0px_0px_#FFB7C5]"
             />
             

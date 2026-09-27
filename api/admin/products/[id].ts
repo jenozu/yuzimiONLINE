@@ -5,3 +5,4 @@ export default function product(req: VercelRequest, res: VercelResponse) {
   req.query.path = ['admin', 'products', String(req.query.id || '')];
   return handler(req, res);
 }
+

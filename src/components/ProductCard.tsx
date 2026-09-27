@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
-import { Product } from "../types";
+import type { Product } from "../types";
 
 export interface ProductCardProps {
   product: Product;
@@ -25,6 +25,9 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               <img 
                 src={product.image} 
                 alt={product.name}
+                loading="lazy"
+                decoding="async"
+                sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 92vw"
                 className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
               />
               <div className="absolute inset-0 bg-cherry/5 pointer-events-none group-hover:opacity-0 transition-opacity"></div>
@@ -58,7 +61,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             </h3>
           </div>
           <div className="flex justify-between items-center border-t-2 border-charcoal/30 pt-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/60">{["Prints", "Apparel", "Gear", "Home"].includes(product.category) ? product.name : product.category}</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/60">{["Prints", "Apparel", "Gear", "Home"].includes(product.category) ? "Art Print" : product.category}</span>
             <span className="text-lg font-black italic tracking-tighter bg-white px-2.5 py-0.5 border border-charcoal shadow-[2px_2px_0px_0px_#FFB7C5] text-charcoal">
               ${Number.isInteger(product.price) ? product.price : product.price.toFixed(2)}+
             </span>
