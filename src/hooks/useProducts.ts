@@ -12,9 +12,17 @@ export function useProducts() {
     const controller = new AbortController();
     fetch("/api/products", { signal: controller.signal })
       .then(async (response) => {
-        const body = await response.json().catch(() => null) as ProductsResponse | { error?: string } | null;
-        if (!response.ok) throw new Error(body && "error" in body ? body.error : "Could not load the catalog.");
-        setProducts((body as ProductsResponse).products || []);
+        const body: unknown = await response.json().catch(() => null);
+        if (!response.ok) {
+          const message = body && typeof body === "object" && "error" in body && typeof body.error === "string"
+            ? body.error
+            : "Could not load the catalog.";
+          throw new Error(message);
+        }
+        if (!body || typeof body !== "object" || !("products" in body) || !Array.isArray(body.products)) {
+          throw new Error("Catalog API returned an invalid response. Check Vercel routing for /api/products.");
+        }
+        setProducts((body as ProductsResponse).products);
       })
       .catch((caught) => {
         if (caught instanceof DOMException && caught.name === "AbortError") return;
@@ -28,4 +36,3 @@ export function useProducts() {
 
   return { products, loading, error };
 }
-
