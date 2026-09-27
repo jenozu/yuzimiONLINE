@@ -14,7 +14,8 @@ Restore the pre-roadmap storefront **without touching customer data**, prove its
 - [x] Identify the last pre-roadmap code candidate: commit `d27de8b` from September 24 <!-- task:YUZ-M0-002 -->
   - Candidate identified through Git history, **not** independently proven to be the last healthy deployed build.
 - [x] Prepare a rollback branch using that application's code and this corrected master plan <!-- task:YUZ-M0-003 -->
-- [ ] Pass baseline TypeScript and build CI and review the rollback diff before merging <!-- task:YUZ-M0-004 -->
+- [x] Pass baseline TypeScript and build CI and review the rollback diff before merging <!-- task:YUZ-M0-004 -->
+  - GitHub Actions recovery baseline checks passed and the comparison with d27de8b showed only recovery documentation, roadmap and CI added; Vercel preview build status was successful. Production endpoints still need M0 acceptance.
 - [ ] Deploy or promote the rollback and capture the Vercel deployment ID, commit SHA and status <!-- task:YUZ-M0-005 -->
   - The Vercel connector currently returns 403 for the `jenozus-projects` scope. Owner should reconnect access or use the Vercel dashboard for deploy verification.
   - Do not claim the deployed site is fixed merely because GitHub CI passes.
