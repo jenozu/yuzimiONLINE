@@ -1,7 +1,7 @@
-import { useState, useEffect, type FormEvent } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "motion/react";
-import { Truck, RotateCcw, ShieldCheck, Mail, HelpCircle } from "lucide-react";
+import { Truck, RotateCcw, ShieldCheck, Mail, CheckCircle, HelpCircle } from "lucide-react";
 
 export function Support() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -9,9 +9,8 @@ export function Support() {
   const [activeTab, setActiveTab] = useState(tabParam);
 
   // Contact form state
+  const [formSubmitted, setFormSubmitted] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", inquiry: "Shipping Query", message: "" });
-  const [contactError, setContactError] = useState("");
-  const contactEmail = String(import.meta.env.VITE_SUPPORT_EMAIL || "").trim();
 
   useEffect(() => {
     if (tabParam) {
@@ -24,15 +23,12 @@ export function Support() {
     setSearchParams({ tab: tabId });
   };
 
-  const handleContactSubmit = (e: FormEvent) => {
+  const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!contactEmail) {
-      setContactError("Contact email is not configured yet. Please check back before placing an order.");
-      return;
-    }
-    const subject = `[${formData.inquiry}] yuzimiONLINE support request`;
-    const body = `Name: ${formData.name}\nReply email: ${formData.email}\n\n${formData.message}`;
-    window.location.href = `mailto:${encodeURIComponent(contactEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setFormSubmitted(true);
+    setTimeout(() => {
+      setFormData({ name: "", email: "", inquiry: "Shipping Query", message: "" });
+    }, 500);
   };
 
   const tabs = [
@@ -209,13 +205,28 @@ Everything you need to know about art-print production, shipping, replacements, 
               </h2>
             </div>
 
+            {formSubmitted ? (
+              <div className="p-8 border-3 border-charcoal bg-[#FFF2F5] shadow-[6px_6px_0px_0px_#FFB7C5] text-center space-y-4">
+                <div className="w-14 h-14 bg-cherry border-3 border-charcoal mx-auto flex items-center justify-center">
+                  <CheckCircle className="w-8 h-8 text-charcoal" />
+                </div>
+                <h3 className="text-2xl font-black uppercase text-charcoal">Message Received</h3>
+                <p className="text-sm font-semibold text-charcoal/70 max-w-md mx-auto">
+                  Thanks for reaching out. We’ll review your message and respond within 1–2 business days.
+                </p>
+                <button
+                  onClick={() => setFormSubmitted(false)}
+                  className="btn-brutal text-xs py-2 px-6"
+                >
+                  Send Another Message
+                </button>
+              </div>
+            ) : (
               <form onSubmit={handleContactSubmit} className="space-y-5 max-w-xl">
-                <p className="text-sm font-semibold text-charcoal/70">Complete the form to open a pre-addressed message in your email app. No message is stored by this website.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label htmlFor="support-name" className="text-xs font-black uppercase text-charcoal">Name</label>
+                    <label className="text-xs font-black uppercase text-charcoal">Name</label>
                     <input
-                      id="support-name"
                       required
                       type="text"
                       value={formData.name}
@@ -225,9 +236,8 @@ Everything you need to know about art-print production, shipping, replacements, 
                     />
                   </div>
                   <div className="space-y-1">
-                    <label htmlFor="support-email" className="text-xs font-black uppercase text-charcoal">Email Address</label>
+                    <label className="text-xs font-black uppercase text-charcoal">Email Address</label>
                     <input
-                      id="support-email"
                       required
                       type="email"
                       value={formData.email}
@@ -239,9 +249,8 @@ Everything you need to know about art-print production, shipping, replacements, 
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor="support-category" className="text-xs font-black uppercase text-charcoal">Inquiry Category</label>
+                  <label className="text-xs font-black uppercase text-charcoal">Inquiry Category</label>
                   <select
-                    id="support-category"
                     value={formData.inquiry}
                     onChange={(e) => setFormData({ ...formData, inquiry: e.target.value })}
                     className="w-full bg-white border-3 border-charcoal p-3 text-xs font-black uppercase outline-none shadow-[3px_3px_0px_0px_#141414]"
@@ -255,9 +264,8 @@ Everything you need to know about art-print production, shipping, replacements, 
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor="support-message" className="text-xs font-black uppercase text-charcoal">Message</label>
+                  <label className="text-xs font-black uppercase text-charcoal">Message</label>
                   <textarea
-                    id="support-message"
                     required
                     rows={4}
                     value={formData.message}
@@ -268,10 +276,10 @@ Everything you need to know about art-print production, shipping, replacements, 
                 </div>
 
                 <button type="submit" className="btn-brutal text-sm py-4 px-8 w-full">
-                  Open Email Message
+                  Send Message
                 </button>
-                {contactError && <p role="alert" className="border-2 border-red-700 bg-red-50 p-3 text-sm font-bold text-red-800">{contactError}</p>}
               </form>
+            )}
           </motion.div>
         )}
 

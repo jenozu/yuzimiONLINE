@@ -13,14 +13,12 @@ import {
   Plus,
   RefreshCw,
   Save,
-  Archive,
-  ShoppingBag,
   Trash2,
   UploadCloud,
   X,
 } from "lucide-react";
 
-type ProductStatus = "draft" | "published" | "archived";
+type ProductStatus = "draft" | "published";
 
 const PRINT_SIZES = [
   "8 × 10 in",
@@ -33,8 +31,8 @@ const PRINT_SIZES = [
   "24 × 36 in",
 ] as const;
 
-type VariantDraft = { size: string; price: string; available: boolean };
-type ProductVariant = { size: string; price_cents: number; price: number; position: number; available?: boolean };
+type VariantDraft = { size: string; price: string };
+type ProductVariant = { size: string; price_cents: number; price: number; position: number };
 
 type ProductImage = {
   id?: string;
@@ -74,7 +72,7 @@ const emptyDraft = (): ProductDraft => ({
   title: "",
   slug: "",
   description: "",
-  variants: PRINT_SIZES.map((size) => ({ size, price: "", available: true })),
+  variants: PRINT_SIZES.map((size) => ({ size, price: "" })),
   category: "",
   badge: "",
   status: "draft",
@@ -96,9 +94,9 @@ const productToDraft = (product: AdminProduct): ProductDraft => ({
   variants: PRINT_SIZES.map((size) => {
     const variant = product.variants?.find((item) => item.size === size);
     const priceCents = variant?.price_cents ?? product.price_cents;
-    return { size, price: (priceCents / 100).toFixed(2), available: variant?.available !== false };
+    return { size, price: (priceCents / 100).toFixed(2) };
   }),
-  category: ["Prints", "Apparel", "Gear", "Home"].includes(product.category) ? "" : product.category,
+  category: ["Prints", "Apparel", "Gear", "Home"].includes(product.category) ? product.title : product.category,
   badge: product.badge || "",
   status: product.status,
   images: product.images || [],
@@ -207,13 +205,6 @@ export function Admin() {
     } : current);
   };
 
-  const updateVariantAvailability = (size: string, available: boolean) => {
-    setDraft((current) => current ? {
-      ...current,
-      variants: current.variants.map((variant) => variant.size === size ? { ...variant, available } : variant),
-    } : current);
-  };
-
   const titleChanged = (value: string) => {
     setDraft((current) => {
       if (!current) return current;
@@ -290,13 +281,8 @@ export function Admin() {
     const variants = draft.variants.map((variant, position) => ({
       size: variant.size,
       price_cents: Math.round(Number(variant.price) * 100),
-      available: variant.available,
       position,
     }));
-    if (draft.status === "published" && !variants.some((variant) => variant.available)) {
-      return setError("Publish at least one available print size, or save the product as a draft.");
-    }
-    const availablePrices = variants.filter((variant) => variant.available).map((variant) => variant.price_cents);
     if (!draft.images.length) return setError("Upload at least one product image.");
 
     setSaving(true);
@@ -306,7 +292,7 @@ export function Admin() {
       title: draft.title.trim(),
       slug: slugify(draft.slug || draft.title),
       description: draft.description.trim(),
-      price_cents: Math.min(...(availablePrices.length ? availablePrices : variants.map((variant) => variant.price_cents))),
+      price_cents: Math.min(...variants.map((variant) => variant.price_cents)),
       variants,
       currency: "USD",
       category: draft.category.trim() || draft.title.trim(),
@@ -341,17 +327,17 @@ export function Admin() {
     }
   };
 
-  const archiveProduct = async (product: AdminProduct) => {
-    if (!window.confirm(`Archive “${product.title}”? It will leave the storefront but stay available for historical orders.`)) return;
+  const deleteProduct = async (product: AdminProduct) => {
+    if (!window.confirm(`Delete “${product.title}” and its uploaded images? This cannot be undone.`)) return;
     setError("");
     setMessage("");
     try {
-      const result = await api<{ product: AdminProduct }>(`/api/admin/products/${product.id}`, { method: "DELETE" });
-      setProducts((current) => current.map((item) => item.id === product.id ? result.product : item));
-      if (draft?.id === product.id) setDraft(productToDraft(result.product));
-      setMessage(`${product.title} was archived.`);
+      await api(`/api/admin/products/${product.id}`, { method: "DELETE" });
+      setProducts((current) => current.filter((item) => item.id !== product.id));
+      if (draft?.id === product.id) setDraft(null);
+      setMessage(`${product.title} was deleted.`);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not archive product.");
+      setError(caught instanceof Error ? caught.message : "Could not delete product.");
     }
   };
 
@@ -388,7 +374,6 @@ export function Admin() {
             <h1 className="text-2xl font-black tracking-tighter">yuzimi<span className="text-cherry">ONLINE</span> / ADMIN</h1>
           </div>
           <div className="flex items-center gap-2">
-            <a href="/admin/orders" className="bg-sky-blue text-charcoal border-2 border-white px-4 py-2 text-xs font-black uppercase hover:bg-cherry inline-flex items-center gap-2"><ShoppingBag size={15} /> Orders</a>
             <a href="/" target="_blank" rel="noreferrer" className="bg-white text-charcoal border-2 border-white px-4 py-2 text-xs font-black uppercase hover:bg-sky-blue">View shop</a>
             <button onClick={logout} className="border-2 border-white px-4 py-2 text-xs font-black uppercase hover:bg-cherry hover:text-charcoal hover:border-cherry inline-flex items-center gap-2"><LogOut size={15} /> Log out</button>
           </div>
@@ -443,7 +428,7 @@ export function Admin() {
                 {products.map((product) => (
                   <article key={product.id} className={`p-4 sm:p-5 flex gap-4 hover:bg-cherry-light ${draft?.id === product.id ? "bg-sky-light" : ""}`}>
                     <div className="w-20 h-20 sm:w-24 sm:h-24 border-2 border-charcoal bg-neutral-100 shrink-0 overflow-hidden">
-                      {product.images[0]?.url ? <img src={product.images[0].url} alt={product.images[0].alt || product.title} loading="lazy" decoding="async" className="w-full h-full object-cover" /> : <div className="h-full grid place-items-center"><ImagePlus /></div>}
+                      {product.images[0]?.url ? <img src={product.images[0].url} alt={product.images[0].alt || product.title} className="w-full h-full object-cover" /> : <div className="h-full grid place-items-center"><ImagePlus /></div>}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -457,7 +442,7 @@ export function Admin() {
                         <strong>From ${(product.price_cents / 100).toFixed(2)}</strong>
                         <div className="flex gap-2">
                           <button onClick={() => editProduct(product)} className="border-2 border-charcoal px-3 py-2 text-xs font-black uppercase hover:bg-sky-blue inline-flex items-center gap-1"><Pencil size={14} /> Edit</button>
-                          {product.status !== "archived" && <button onClick={() => void archiveProduct(product)} className="border-2 border-charcoal p-2 hover:bg-red-200" aria-label={`Archive ${product.title}`} title="Archive product"><Archive size={16} /></button>}
+                          <button onClick={() => void deleteProduct(product)} className="border-2 border-charcoal p-2 hover:bg-red-200" aria-label={`Delete ${product.title}`}><Trash2 size={16} /></button>
                         </div>
                       </div>
                     </div>
@@ -495,7 +480,7 @@ export function Admin() {
                   <Field label="Anime / series" htmlFor="category" hint="Shown beneath the print title in the collection."><input id="category" value={draft.category} onChange={(event) => updateDraft("category", event.target.value)} className="admin-input" placeholder="Bayonetta" required /></Field>
                   <fieldset>
                     <legend className="text-xs font-black uppercase tracking-widest">Variant prices (USD)</legend>
-                    <p className="text-xs text-neutral-500 mt-1">Enter each price and pause any size that should not be sold.</p>
+                    <p className="text-xs text-neutral-500 mt-1">Enter the selling price for every print size.</p>
                     <div className="grid grid-cols-2 gap-3 mt-3">
                       {draft.variants.map((variant) => {
                         const inputId = `variant-${variant.size.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
@@ -506,10 +491,6 @@ export function Admin() {
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-sm" aria-hidden="true">$</span>
                               <input id={inputId} type="number" inputMode="decimal" min="0" step="0.01" value={variant.price} onChange={(event) => updateVariantPrice(variant.size, event.target.value)} className="admin-input !pl-7" placeholder="0.00" required aria-label={`${variant.size} price in USD`} />
                             </div>
-                            <label className="mt-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-wide cursor-pointer">
-                              <input type="checkbox" checked={variant.available} onChange={(event) => updateVariantAvailability(variant.size, event.target.checked)} className="size-4 accent-[#FFB7C5]" />
-                              Available
-                            </label>
                           </div>
                         );
                       })}
@@ -522,10 +503,9 @@ export function Admin() {
 
                   <fieldset>
                     <legend className="text-xs font-black uppercase tracking-widest mb-2">Visibility</legend>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <StatusButton active={draft.status === "draft"} onClick={() => updateDraft("status", "draft")} icon={<EyeOff size={16} />} label="Draft" />
                       <StatusButton active={draft.status === "published"} onClick={() => updateDraft("status", "published")} icon={<Eye size={16} />} label="Published" />
-                      <StatusButton active={draft.status === "archived"} onClick={() => updateDraft("status", "archived")} icon={<Archive size={16} />} label="Archived" />
                     </div>
                   </fieldset>
 
@@ -542,7 +522,7 @@ export function Admin() {
                       <div className="mt-3 grid grid-cols-2 gap-3">
                         {draft.images.map((image, index) => (
                           <div key={`${image.object_key}-${index}`} className="border-2 border-charcoal bg-white">
-                            <div className="aspect-square relative overflow-hidden bg-neutral-100"><img src={image.url} alt={image.alt || `Product image ${index + 1}`} loading="lazy" decoding="async" className="w-full h-full object-cover" />{index === 0 && <span className="absolute left-1 top-1 bg-cherry border-2 border-charcoal px-2 py-1 text-[9px] font-black uppercase">Cover</span>}</div>
+                            <div className="aspect-square relative overflow-hidden bg-neutral-100"><img src={image.url} alt={image.alt || `Product image ${index + 1}`} className="w-full h-full object-cover" />{index === 0 && <span className="absolute left-1 top-1 bg-cherry border-2 border-charcoal px-2 py-1 text-[9px] font-black uppercase">Cover</span>}</div>
                             <div className="grid grid-cols-3 divide-x-2 divide-charcoal border-t-2 border-charcoal">
                               <button type="button" aria-label="Move image earlier" disabled={index === 0} onClick={() => moveImage(index, -1)} className="p-2 hover:bg-sky-blue disabled:opacity-25"><ChevronUp size={16} className="mx-auto" /></button>
                               <button type="button" aria-label="Move image later" disabled={index === draft.images.length - 1} onClick={() => moveImage(index, 1)} className="p-2 hover:bg-sky-blue disabled:opacity-25"><ChevronDown size={16} className="mx-auto" /></button>

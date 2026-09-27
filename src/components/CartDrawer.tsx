@@ -121,8 +121,6 @@ export function CartDrawer() {
                     <img
                       src={item.product.image}
                       alt={item.product.name}
-                      loading="lazy"
-                      decoding="async"
                       className="w-18 h-18 object-cover border-2 border-charcoal shrink-0 bg-[#FFF0F4]"
                     />
 

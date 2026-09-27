@@ -1,0 +1,24 @@
+name: Recovery baseline checks
+
+on:
+  push:
+    branches:
+      - main
+      - "recovery/**"
+  pull_request:
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: TypeScript check
+        run: npm run lint
+      - name: Production build
+        run: npm run build
