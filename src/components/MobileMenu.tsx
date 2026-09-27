@@ -65,9 +65,9 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
               <nav className="space-y-3">
                 {[
                   { name: "Collections", path: "/collections", badge: "Live" },
-                  { name: "Archive Lookbook", path: "/lookbook", badge: "New" },
-                  { name: "Historical Vault", path: "/archive", badge: "Drops" },
-                  { name: "Protocol & Support", path: "/support", badge: "Node" }
+                  { name: "Lookbook", path: "/lookbook", badge: "New" },
+                  { name: "Collection Archive", path: "/archive", badge: "Drops" },
+                  { name: "Support", path: "/support", badge: "Help" }
                 ].map((item) => (
                   <Link
                     key={item.path}
@@ -124,7 +124,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                 yuzimiONLINE // TOKYO SPEC
               </p>
               <p className="text-[10px] text-charcoal/40 font-semibold mt-1">
-                Anime Brutalist Apparel & Botanical Utility
+                Anime-inspired art prints in eight sizes
               </p>
             </div>
           </motion.div>

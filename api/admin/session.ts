@@ -5,3 +5,4 @@ export default function session(req: VercelRequest, res: VercelResponse) {
   req.query.path = ['admin', 'session'];
   return handler(req, res);
 }
+

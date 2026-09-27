@@ -15,3 +15,4 @@ export function shippingCents(country: string, quantity: number): number {
   if (!rate || !Number.isInteger(quantity) || quantity < 1) throw new Error('Unsupported shipping destination or quantity.');
   return rate[0] + (quantity - 1) * rate[1];
 }
+

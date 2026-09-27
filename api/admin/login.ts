@@ -5,3 +5,4 @@ export default function login(req: VercelRequest, res: VercelResponse) {
   req.query.path = ['admin', 'login'];
   return handler(req, res);
 }
+
