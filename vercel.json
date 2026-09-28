@@ -1,5 +1,15 @@
 {
   "rewrites": [
-    { "source": "/admin", "destination": "/index.html" }
+    { "source": "/admin", "destination": "/index.html" },
+    { "source": "/collections", "destination": "/index.html" },
+    { "source": "/lookbook", "destination": "/index.html" },
+    { "source": "/archive", "destination": "/index.html" },
+    { "source": "/support", "destination": "/index.html" },
+    { "source": "/privacy", "destination": "/index.html" },
+    { "source": "/terms", "destination": "/index.html" },
+    { "source": "/security", "destination": "/index.html" },
+    { "source": "/product/:id", "destination": "/index.html" },
+    { "source": "/checkout/success", "destination": "/index.html" },
+    { "source": "/checkout/cancel", "destination": "/index.html" }
   ]
 }
