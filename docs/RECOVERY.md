@@ -33,3 +33,9 @@
 
 ## Change-control rule
 Until M0 is accepted, no autonomous roadmap-wide implementation batches, no major architecture rewrites, no production DB migrations, and no live payments. Use one small PR per task, with baseline build validation and deployed acceptance, then mark the exact matching roadmap task complete. The Voyages tool is for visualization of `master_plan.md`, not an authority to mark code or business decisions complete.
+
+## September 28 follow-up: Stripe return URL regression
+- The owner reached Stripe's **sandbox** payment screen and saw Stripe's green success confirmation for the Bayonetta test cart. Stripe then redirected to `/checkout/success?session_id=...`, which returned Vercel `404 NOT_FOUND` instead of the React `CheckoutResult` page.
+- The September 24 baseline `vercel.json` only rewrote `/admin`. React Router knows `/checkout/success` and `/checkout/cancel`, but Vercel needs explicit rewrites for direct access. The targeted fix rewrites only known browser routes to `/index.html`, preserving native `/api/*` serverless functions.
+- CI includes `tests/routing.test.mjs` to check the Stripe return pages and ensure catalog, admin and checkout APIs are not masked by SPA routing.
+- **Not yet validated:** whether the test payment marked the Neon order paid or the webhook was delivered. Do **not** mark M0-010 complete based solely on Stripe's green screen; once the fix deploys, owner should re-open the original test return URL privately, verify the order reaches `paid`, the cart clears and Stripe shows a successful webhook delivery (HTTP 200). Redact the session ID when sharing screenshots.
