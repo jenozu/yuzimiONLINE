@@ -20,5 +20,7 @@ jobs:
         run: npm ci
       - name: TypeScript check
         run: npm run lint
+      - name: Regression tests for SPA and API routing
+        run: node --test tests/routing.test.mjs
       - name: Production build
         run: npm run build
