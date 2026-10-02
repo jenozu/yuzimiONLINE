@@ -180,7 +180,9 @@ Give customers clear confirmations, status updates, and a reliable way to get he
 
 ### Implementation
 - [ ] Set up a transactional email provider and verified sending domain <!-- task:YUZ-M8-001 -->
+  - Resend test integration is implemented using `onboarding@resend.dev`; keep this task open until a YUZIMI-owned domain is purchased, DNS-verified, and used as the sender.
 - [ ] Send order confirmations only after verified payment <!-- task:YUZ-M8-002 -->
+  - Code now sends a branded Resend confirmation from the verified Stripe webhook path only after the server-side order is paid. Test mode routes mail to `RESEND_TEST_RECIPIENT` and uses an order-scoped Resend idempotency key. Keep open until a deployed test order produces the expected email and webhook HTTP 200.
 - [ ] Send shipping confirmations with carrier and tracking details <!-- task:YUZ-M8-003 -->
 - [ ] Add internal alerts for new paid orders, fulfillment failures, and disputes <!-- task:YUZ-M8-004 -->
 - [ ] Connect the support/contact form to a monitored inbox with spam protection <!-- task:YUZ-M8-005 -->
