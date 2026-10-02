@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { markPaid, ordersDb } from '../lib/checkout/orders.js';
+import { sendOrderConfirmation } from '../lib/order-email.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -29,14 +30,32 @@ export default async function webhook(req: VercelRequest, res: VercelResponse) {
     const expected = createHmac('sha256', secret).update(`${timestamp}.${raw.toString('utf8')}`).digest();
     const valid = candidates.some(candidate => timingSafeEqual(Buffer.from(candidate, 'hex'), expected));
     if (!valid) return res.status(400).end();
+
     const event = JSON.parse(raw.toString('utf8'));
+
     if (!event.livemode && (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded')) {
       const session = event.data.object;
       if (session.metadata?.orderId && session.id?.startsWith('cs_test_')) {
         const updated = await markPaid(session.metadata.orderId, session);
-        if (!updated && session.payment_status === 'paid') return res.status(500).json({ error: 'Order was not recorded; Stripe will retry.' });
+        const sql = ordersDb();
+        const rows = await sql`SELECT id, stripe_session_id, status, line_items, country, subtotal_cents,
+            shipping_cents, total_cents, customer_email, shipping_details
+          FROM checkout_orders
+          WHERE id = ${session.metadata.orderId} AND stripe_session_id = ${session.id}
+          LIMIT 1`;
+        const order = rows[0];
+
+        if (!order || (session.payment_status === 'paid' && !updated && order.status !== 'paid')) {
+          return res.status(500).json({ error: 'Order was not recorded; Stripe will retry.' });
+        }
+
+        if (session.payment_status === 'paid' && order.status === 'paid') {
+          const email = await sendOrderConfirmation(order as any);
+          if (!email.skipped) console.info('Order confirmation sent:', email.id);
+        }
       }
     }
+
     if (!event.livemode && event.type === 'checkout.session.async_payment_failed') {
       const session = event.data.object;
       if (session.metadata?.orderId) {
@@ -45,6 +64,7 @@ export default async function webhook(req: VercelRequest, res: VercelResponse) {
           WHERE id = ${session.metadata.orderId} AND stripe_session_id = ${session.id} AND status = 'pending'`;
       }
     }
+
     return res.status(200).json({ received: true });
   } catch (error) {
     console.error('Stripe webhook error:', error);
