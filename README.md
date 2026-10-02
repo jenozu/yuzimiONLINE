@@ -14,6 +14,7 @@ This repository currently restores the storefront/API code from September 24, 20
 - The application uses an **existing** Neon database and Cloudflare R2 bucket. The code rollback must not delete or reset either; never apply the old `db/schema.sql` to production as a recovery tactic.
 - Make sure `DATABASE_URL` references the same production Neon branch that held Bayonetta. `/api/products` returns `{ "products": [...] }`, with only published products.
 - Required Vercel environment variables: `DATABASE_URL`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`. Stripe tests also require `STRIPE_SECRET_KEY` beginning with `sk_test_` and `STRIPE_WEBHOOK_SECRET` beginning with `whsec_`.
+- Transactional email testing uses Resend. See `docs/EMAIL_SETUP.md` for `RESEND_API_KEY`, the temporary `onboarding@resend.dev` sender, safe test-recipient routing, and the later custom-domain switch.
 - Do not use live payment keys or fulfill orders during recovery.
 
 ## Deployment and verification
