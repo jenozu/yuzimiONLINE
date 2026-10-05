@@ -180,7 +180,7 @@ Give customers clear confirmations, status updates, and a reliable way to get he
 
 ### Implementation
 - [ ] Set up a transactional email provider and verified sending domain <!-- task:YUZ-M8-001 -->
-  - Resend test integration is implemented using `onboarding@resend.dev`; keep this task open until a YUZIMI-owned domain is purchased, DNS-verified, and used as the sender.
+  - `yuzimi.online` has been purchased. Resend integration code is implemented; keep this task open until the domain's SPF/DKIM records are added at Namecheap, Resend verifies sending, and `orders@yuzimi.online` is used in a deployed test.
 - [ ] Send order confirmations only after verified payment <!-- task:YUZ-M8-002 -->
   - Code now sends a branded Resend confirmation from the verified Stripe webhook path only after the server-side order is paid. Test mode routes mail to `RESEND_TEST_RECIPIENT` and uses an order-scoped Resend idempotency key. Keep open until a deployed test order produces the expected email and webhook HTTP 200.
 - [ ] Send shipping confirmations with carrier and tracking details <!-- task:YUZ-M8-003 -->
@@ -235,6 +235,7 @@ Launch deliberately, verify the real buying journey, and keep the store healthy 
 
 ### Implementation
 - [ ] Connect the production custom domain and verify HTTPS, redirects, and canonical host behavior <!-- task:YUZ-M11-001 -->
+  - `yuzimi.online` has been purchased at Namecheap. Next: remove registrar URL forwarding, point apex/www DNS at Vercel, make `yuzimi.online` primary, redirect `www` to apex, then verify Vercel's automatic HTTPS certificate.
 - [ ] Create a launch inventory with final titles, series, descriptions, alt text, prices, and approved artwork <!-- task:YUZ-M11-002 -->
 - [ ] Run a content proofread and visual QA at common desktop, tablet, and mobile sizes <!-- task:YUZ-M11-003 -->
 - [ ] Complete the prelaunch runbook covering database, storage, Stripe, email, fulfillment, policies, and support <!-- task:YUZ-M11-004 -->
