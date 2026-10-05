@@ -1,17 +1,26 @@
 # YUZIMI transactional email setup
 
-YUZIMI uses Resend for order-confirmation emails. During the temporary test phase, messages are sent from Resend's testing sender rather than a YUZIMI-owned domain.
+YUZIMI uses Resend for order-confirmation emails. The production sending domain is now `yuzimi.online`.
 
-## Temporary test configuration
+## Domain + HTTPS order of operations
 
-Set these Vercel environment variables for Production (and Preview if you test previews):
+1. Connect `yuzimi.online` to the Vercel project and wait until Vercel shows **Valid Configuration**.
+2. Verify that both `https://yuzimi.online` and `https://www.yuzimi.online` resolve as intended and that Vercel has automatically provisioned SSL.
+3. Add `yuzimi.online` to Resend.
+4. Add Resend's exact SPF/DKIM records to the same DNS zone at Namecheap. These records can coexist with the Vercel A/CNAME records.
+5. Wait until Resend reports the domain verified for sending.
+6. Create a Resend **sending-only** API key restricted to `yuzimi.online`.
 
-- `RESEND_API_KEY`: a Resend sending-only API key.
-- `RESEND_ORDER_FROM`: `yuzimiONLINE <onboarding@resend.dev>`
-- `RESEND_TEST_RECIPIENT`: the store owner's test inbox.
-- `RESEND_REPLY_TO`: optional; leave blank until a monitored support inbox is ready.
+## Vercel email environment variables
 
-Keep `RESEND_TEST_RECIPIENT` set while using the Resend test sender. This prevents test checkouts from sending confirmations to arbitrary checkout addresses.
+Set these for Production (and Preview if you test previews):
+
+- `RESEND_API_KEY`: the Resend sending-only API key.
+- `RESEND_ORDER_FROM`: `yuzimiONLINE <orders@yuzimi.online>`
+- `RESEND_TEST_RECIPIENT`: the store owner's test inbox while validating order emails.
+- `RESEND_REPLY_TO`: optional; set only to a monitored inbox.
+
+Keep `RESEND_TEST_RECIPIENT` while testing. Remove it only after email delivery is verified and you want confirmations to go to each Stripe customer email.
 
 After changing Vercel environment variables, create a fresh deployment.
 
@@ -33,21 +42,19 @@ Use Stripe test mode and a test checkout. Confirm all of the following:
 - Stripe shows the test payment as successful.
 - Stripe webhook delivery returns HTTP 200.
 - The order-confirmation email arrives at `RESEND_TEST_RECIPIENT`.
+- The email is sent from `orders@yuzimi.online`.
 - The email has the correct order reference, print, size, quantity, subtotal, shipping and total.
 - Retrying the same Stripe webhook does not create an immediate duplicate confirmation.
 
-Do not use live Stripe keys while the test sender is active.
+Keep Stripe in test mode until these checks pass.
 
-## Switching to a YUZIMI domain later
+## Going live later
 
-After purchasing the YUZIMI domain:
+After the custom domain and order email are verified:
 
-1. Add the domain to Resend.
-2. Add Resend's SPF/DKIM DNS records at the registrar and verify the domain.
-3. Create a domain-scoped sending API key, then replace `RESEND_API_KEY` in Vercel.
-4. Change `RESEND_ORDER_FROM` to an address such as `yuzimiONLINE <orders@your-domain.example>`.
-5. Remove `RESEND_TEST_RECIPIENT` so confirmations go to the paid order's Stripe customer email.
-6. Optionally set `RESEND_REPLY_TO` to a monitored support address.
-7. Redeploy and perform one test-mode purchase before enabling real payments.
+1. Remove `RESEND_TEST_RECIPIENT` so confirmations go to the paid order's Stripe customer email.
+2. Optionally set `RESEND_REPLY_TO` to a monitored support address.
+3. Update Stripe's webhook endpoint to the custom domain only after `https://yuzimi.online/api/stripe-webhook` is confirmed working. Avoid leaving duplicate active endpoints longer than necessary.
+4. Perform another test-mode purchase through `https://yuzimi.online` before enabling real payments.
 
 Before live launch, add persistent application-level email delivery state/outbox handling in addition to Resend's temporary idempotency window.
