@@ -4,6 +4,19 @@ RECOVERY BASELINE: Code before the September 27 autonomous roadmap batch, Git co
 
 Checkboxes reflect code and history visible at the chosen baseline; they do not imply deployed acceptance. Newer functionality from the September 27 batch is tracked but unchecked until reintroduced in narrow, verified PRs.
 
+## Current focus — custom domain and transactional email
+
+The store has passed a Stripe sandbox payment and the checkout-success route is repaired. The next work should stay narrowly focused on moving the recovered store to the new custom domain, then finishing verified order-confirmation email before resuming broader feature work.
+
+Current priority order:
+1. **YUZ-M11-001** — connect `yuzimi.online` to Vercel, remove the old Namecheap URL redirect, point apex/www DNS to Vercel, make the apex domain canonical, and verify automatic HTTPS.
+2. **YUZ-M8-001** — verify `yuzimi.online` in Resend with SPF/DKIM records and configure a domain-restricted sending key.
+3. **YUZ-M8-002** — deploy PR #5 and verify paid Stripe test orders send a branded confirmation from `orders@yuzimi.online`.
+4. **YUZ-M4-010 / YUZ-M4-011** — confirm the Stripe test webhook on the custom domain and rerun end-to-end checkout acceptance.
+5. **YUZ-M0-010 / YUZ-M0-011** — close recovery only after custom-domain checkout, paid-order reconciliation, webhook delivery, cart clearing, and order email all pass.
+
+Do not introduce another broad roadmap implementation batch while these acceptance gates are open.
+
 ## M0: Recovery and production stabilization
 
 ### Goal
@@ -180,9 +193,12 @@ Give customers clear confirmations, status updates, and a reliable way to get he
 
 ### Implementation
 - [ ] Set up a transactional email provider and verified sending domain <!-- task:YUZ-M8-001 -->
-  - `yuzimi.online` has been purchased. Resend integration code is implemented; keep this task open until the domain's SPF/DKIM records are added at Namecheap, Resend verifies sending, and `orders@yuzimi.online` is used in a deployed test.
+  - `yuzimi.online` was purchased at Namecheap on October 5, 2026.
+  - Resend integration code is prepared in PR #5. Keep this task open until SPF/DKIM records are added at Namecheap, Resend reports the domain verified, and a domain-restricted sending key is configured in Vercel.
 - [ ] Send order confirmations only after verified payment <!-- task:YUZ-M8-002 -->
-  - Code now sends a branded Resend confirmation from the verified Stripe webhook path only after the server-side order is paid. Test mode routes mail to `RESEND_TEST_RECIPIENT` and uses an order-scoped Resend idempotency key. Keep open until a deployed test order produces the expected email and webhook HTTP 200.
+  - PR #5 sends a branded confirmation only from the verified Stripe webhook path after the server-side order is marked paid.
+  - Planned production sender: `yuzimiONLINE <orders@yuzimi.online>`.
+  - Keep this task open until a deployed Stripe sandbox purchase produces the expected email and the webhook returns HTTP 200.
 - [ ] Send shipping confirmations with carrier and tracking details <!-- task:YUZ-M8-003 -->
 - [ ] Add internal alerts for new paid orders, fulfillment failures, and disputes <!-- task:YUZ-M8-004 -->
 - [ ] Connect the support/contact form to a monitored inbox with spam protection <!-- task:YUZ-M8-005 -->
@@ -235,7 +251,11 @@ Launch deliberately, verify the real buying journey, and keep the store healthy 
 
 ### Implementation
 - [ ] Connect the production custom domain and verify HTTPS, redirects, and canonical host behavior <!-- task:YUZ-M11-001 -->
-  - `yuzimi.online` has been purchased at Namecheap. Next: remove registrar URL forwarding, point apex/www DNS at Vercel, make `yuzimi.online` primary, redirect `www` to apex, then verify Vercel's automatic HTTPS certificate.
+  - Domain acquired: `yuzimi.online` at Namecheap on October 5, 2026.
+  - Remove Namecheap's current URL-forwarding rule before switching DNS.
+  - Add both `yuzimi.online` and `www.yuzimi.online` to the existing Vercel `yuzimi-online` project.
+  - Use the exact apex A / `www` CNAME values Vercel provides, make `yuzimi.online` the primary host, and redirect `www` to apex.
+  - Complete only after Vercel reports valid DNS configuration and HTTPS works without certificate warnings on both hostnames.
 - [ ] Create a launch inventory with final titles, series, descriptions, alt text, prices, and approved artwork <!-- task:YUZ-M11-002 -->
 - [ ] Run a content proofread and visual QA at common desktop, tablet, and mobile sizes <!-- task:YUZ-M11-003 -->
 - [ ] Complete the prelaunch runbook covering database, storage, Stripe, email, fulfillment, policies, and support <!-- task:YUZ-M11-004 -->
