@@ -44,10 +44,10 @@ Make the purchased custom domain the real storefront address.
 
 - [x] Add `yuzimi.online` to the existing Vercel project <!-- task:YUZ-LMVP-008 -->
 - [x] Add `www.yuzimi.online` and redirect it to the apex domain <!-- task:YUZ-LMVP-009 -->
-- [ ] Remove the old Namecheap URL-forwarding rule and apply the DNS records Vercel provides <!-- task:YUZ-LMVP-010 -->
-- [ ] Verify HTTPS works without certificate warnings on both apex and `www` <!-- task:YUZ-LMVP-011 -->
-- [ ] Make `https://yuzimi.online` the canonical production URL everywhere the app needs an absolute storefront URL <!-- task:YUZ-LMVP-012 -->
-  - Code support is ready: canonical metadata was added in PR #7 and `PUBLIC_STORE_URL=https://yuzimi.online` is now configured in Vercel Production. Keep open until DNS/HTTPS are verified.
+- [x] Remove the old Namecheap URL-forwarding rule and apply the DNS records Vercel provides <!-- task:YUZ-LMVP-010 -->
+- [x] Verify HTTPS works without certificate warnings on both apex and `www` <!-- task:YUZ-LMVP-011 -->
+- [x] Make `https://yuzimi.online` the canonical production URL everywhere the app needs an absolute storefront URL <!-- task:YUZ-LMVP-012 -->
+  - Canonical metadata was added in PR #7 and `PUBLIC_STORE_URL=https://yuzimi.online` is configured in Vercel Production. DNS, HTTPS and the `www` → apex redirect are verified.
 
 **Milestone complete when:** both domain variants securely land on the production store and the apex domain is canonical.
 
