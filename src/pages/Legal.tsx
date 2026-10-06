@@ -1,5 +1,5 @@
 import { useLocation, Link } from "react-router-dom";
-import { ArrowLeft, Shield, FileText, Lock } from "lucide-react";
+import { ArrowLeft, Shield } from "lucide-react";
 
 export function Legal() {
   const location = useLocation();
@@ -70,16 +70,6 @@ export function Legal() {
           </h2>
           <p className="text-sm font-medium text-charcoal/80 leading-relaxed">
             All anime brutalist graphics, cherry blossom color grading formulations, product schematics, and editorial media are the exclusive copyright of yuzimiONLINE Tokyo. Unauthorized duplication or resale of counterfeit units will be met with legal dispatch.
-          </p>
-        </div>
-
-        <div className="p-6 bg-[#FFF2F5] border-3 border-charcoal space-y-2">
-          <div className="flex items-center gap-2 font-black text-xs uppercase text-charcoal">
-            <Lock className="w-4 h-4 text-cherry-dark" />
-            <span>Cryptographic Verification Node</span>
-          </div>
-          <p className="text-xs font-semibold text-charcoal/70">
-            For legal inquiries or audit requests, contact legal@yuzimionline.tokyo with your signed PGP certificate.
           </p>
         </div>
       </div>
