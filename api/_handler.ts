@@ -6,6 +6,9 @@ import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 const COOKIE_NAME = 'yuzimi_admin_session';
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_LIMIT = 10;
+const loginBuckets = new Map<string, { count: number; resetAt: number }>();
 const PRINT_SIZES = [
   '8 × 10 in',
   '11 × 14 in',
@@ -18,6 +21,26 @@ const PRINT_SIZES = [
 ] as const;
 
 type ImageInput = { url: string; object_key?: string; alt?: string };
+
+function clientKey(req: VercelRequest) {
+  const forwarded = req.headers['x-forwarded-for'];
+  const first = Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(',')[0];
+  return String(first || req.headers['x-real-ip'] || 'unknown').trim().slice(0, 100);
+}
+
+function allowLogin(req: VercelRequest) {
+  const key = clientKey(req);
+  const now = Date.now();
+  const existing = loginBuckets.get(key);
+  if (!existing || existing.resetAt <= now) {
+    loginBuckets.set(key, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
+    return true;
+  }
+  if (existing.count >= LOGIN_LIMIT) return false;
+  existing.count += 1;
+  return true;
+}
+
 
 function env(name: string): string {
   const value = process.env[name];
@@ -41,7 +64,7 @@ function ensureSchema(): Promise<void> {
         description text NOT NULL DEFAULT '',
         price_cents integer NOT NULL CHECK (price_cents >= 0),
         currency text NOT NULL DEFAULT 'USD',
-        category text NOT NULL DEFAULT 'Apparel',
+        category text NOT NULL DEFAULT 'Art Prints',
         badge text,
         status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
         created_at timestamptz NOT NULL DEFAULT now(),
@@ -241,7 +264,7 @@ function normalizeProduct(input: any) {
     description: String(input.description || ''),
     priceCents,
     currency: String(input.currency || 'USD').toUpperCase().slice(0, 3),
-    category: String(input.category || 'Apparel'),
+    category: String(input.category || 'Art Prints'),
     badge: input.badge ? String(input.badge) : null,
     status: input.status === 'published' ? 'published' : 'draft',
     images: Array.isArray(input.images) ? input.images as ImageInput[] : [],
@@ -257,6 +280,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const route = path.join('/');
 
     if (req.method === 'POST' && route === 'admin/login') {
+      if (!allowLogin(req)) return res.status(429).json({ error: 'Too many login attempts. Please wait a few minutes and try again.' });
       const input = await jsonBody(req);
       if (typeof input.password !== 'string' || input.password !== env('ADMIN_PASSWORD')) return res.status(401).json({ error: 'Incorrect password.' });
       res.setHeader('Set-Cookie', `${COOKIE_NAME}=${createSession()}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=43200`);
@@ -357,8 +381,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(404).json({ error: 'API route not found.' });
   } catch (error) {
     console.error(error);
-    const message = error instanceof Error ? error.message : 'Unexpected server error.';
-    const status = message.includes('required') || message.includes('must be') || message.includes('Invalid') || message.includes('exceeds') || message.includes('Enter a valid') ? 400 : 500;
-    return res.status(status).json({ error: message });
+    const message = error instanceof Error ? error.message : '';
+    const clientError = message.includes('required') || message.includes('must be') || message.includes('Invalid') || message.includes('exceeds') || message.includes('Enter a valid');
+    return res.status(clientError ? 400 : 500).json({
+      error: clientError ? message : 'Unexpected server error.'
+    });
   }
 }
