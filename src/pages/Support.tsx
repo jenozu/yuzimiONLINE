@@ -10,7 +10,9 @@ export function Support() {
 
   // Contact form state
   const [formSubmitted, setFormSubmitted] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", inquiry: "Shipping Query", message: "" });
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [formData, setFormData] = useState({ name: "", email: "", inquiry: "Shipping Question", message: "", website: "" });
 
   useEffect(() => {
     if (tabParam) {
@@ -23,12 +25,25 @@ export function Support() {
     setSearchParams({ tab: tabId });
   };
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormSubmitted(true);
-    setTimeout(() => {
-      setFormData({ name: "", email: "", inquiry: "Shipping Query", message: "" });
-    }, 500);
+    setFormSubmitting(true);
+    setFormError("");
+    try {
+      const response = await fetch("/api/support-contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || "Could not send your message.");
+      setFormSubmitted(true);
+      setFormData({ name: "", email: "", inquiry: "Shipping Question", message: "", website: "" });
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Could not send your message.");
+    } finally {
+      setFormSubmitting(false);
+    }
   };
 
   const tabs = [
@@ -223,6 +238,16 @@ Everything you need to know about art-print production, shipping, replacements, 
               </div>
             ) : (
               <form onSubmit={handleContactSubmit} className="space-y-5 max-w-xl">
+                <div className="hidden" aria-hidden="true">
+                  <label htmlFor="website">Website</label>
+                  <input
+                    id="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={formData.website}
+                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  />
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-black uppercase text-charcoal">Name</label>
@@ -275,8 +300,14 @@ Everything you need to know about art-print production, shipping, replacements, 
                   />
                 </div>
 
-                <button type="submit" className="btn-brutal text-sm py-4 px-8 w-full">
-                  Send Message
+                {formError && (
+                  <p role="alert" className="border-3 border-charcoal bg-red-100 p-3 text-xs font-bold text-charcoal">
+                    {formError}
+                  </p>
+                )}
+
+                <button disabled={formSubmitting} type="submit" className="btn-brutal text-sm py-4 px-8 w-full disabled:opacity-60">
+                  {formSubmitting ? "Sending..." : "Send Message"}
                 </button>
               </form>
             )}
