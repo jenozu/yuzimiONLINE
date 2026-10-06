@@ -33,8 +33,10 @@ export default async function webhook(req: VercelRequest, res: VercelResponse) {
     if (!event.livemode && (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded')) {
       const session = event.data.object;
       if (session.metadata?.orderId && session.id?.startsWith('cs_test_')) {
-        const updated = await markPaid(session.metadata.orderId, session);
-        if (!updated && session.payment_status === 'paid') return res.status(500).json({ error: 'Order was not recorded; Stripe will retry.' });
+        const result = await markPaid(session.metadata.orderId, session);
+        if (result === 'rejected' && session.payment_status === 'paid') {
+          return res.status(500).json({ error: 'Order was not recorded; Stripe will retry.' });
+        }
       }
     }
     if (!event.livemode && event.type === 'checkout.session.async_payment_failed') {
