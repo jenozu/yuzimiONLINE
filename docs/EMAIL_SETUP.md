@@ -58,3 +58,14 @@ After the custom domain and order email are verified:
 4. Perform another test-mode purchase through `https://yuzimi.online` before enabling real payments.
 
 YUZIMI stores `confirmation_email_sent_at` and `confirmation_email_id` on the checkout order after Resend accepts the message. A retry skips orders already recorded as sent; the Resend idempotency key also protects the narrow case where the email was accepted but the database update did not complete.
+
+## Support contact form
+
+The storefront Contact tab posts to `/api/support-contact`; it no longer displays a fake success state.
+
+Configure:
+
+- `SUPPORT_INBOX`: the monitored private inbox that should receive customer support messages.
+- `RESEND_SUPPORT_FROM`: recommended value `yuzimiONLINE Support <support@yuzimi.online>`.
+
+The customer's address is set as the Resend reply-to address, so staff can reply normally from the monitored inbox. The endpoint validates input, includes a honeypot field, and throttles repeated submissions. Test the form after the Resend domain is verified and the environment variables are deployed.
