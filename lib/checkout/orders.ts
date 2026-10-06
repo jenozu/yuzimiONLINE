@@ -1,5 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 
+export type MarkPaidResult = 'paid' | 'already_paid' | 'rejected';
+
 export function ordersDb() {
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not configured.');
   return neon(process.env.DATABASE_URL);
@@ -23,17 +25,35 @@ export async function ensureOrdersTable() {
   )`;
 }
 
-export async function markPaid(orderId: string, session: any) {
-  if (session.payment_status !== 'paid' || session.livemode !== false || !session.id?.startsWith('cs_test_') || session.currency !== 'usd' || session.metadata?.orderId !== orderId) return false;
+export async function markPaid(orderId: string, session: any): Promise<MarkPaidResult> {
+  if (
+    session.payment_status !== 'paid' ||
+    session.livemode !== false ||
+    !session.id?.startsWith('cs_test_') ||
+    session.currency !== 'usd' ||
+    session.metadata?.orderId !== orderId
+  ) return 'rejected';
+
   const sql = ordersDb();
   const email = session.customer_details?.email || session.customer_email || null;
   const shipping = session.collected_information?.shipping_details || session.shipping_details || null;
-  if (shipping?.address?.country !== session.metadata.country) return false;
+  if (shipping?.address?.country !== session.metadata.country) return 'rejected';
+
   const rows = await sql`UPDATE checkout_orders
     SET status = 'paid', paid_at = COALESCE(paid_at, now()), customer_email = ${email},
         shipping_details = ${JSON.stringify(shipping)}::jsonb
     WHERE id = ${orderId} AND stripe_session_id = ${session.id}
       AND total_cents = ${session.amount_total} AND country = ${session.metadata.country}
+      AND status = 'pending'
     RETURNING id`;
-  return rows.length > 0;
+
+  if (rows.length > 0) return 'paid';
+
+  const existing = await sql`SELECT id FROM checkout_orders
+    WHERE id = ${orderId} AND stripe_session_id = ${session.id}
+      AND total_cents = ${session.amount_total} AND country = ${session.metadata.country}
+      AND status = 'paid'
+    LIMIT 1`;
+
+  return existing.length > 0 ? 'already_paid' : 'rejected';
 }
