@@ -47,6 +47,7 @@ Make the purchased custom domain the real storefront address.
 - [ ] Remove the old Namecheap URL-forwarding rule and apply the DNS records Vercel provides <!-- task:YUZ-LMVP-010 -->
 - [ ] Verify HTTPS works without certificate warnings on both apex and `www` <!-- task:YUZ-LMVP-011 -->
 - [ ] Make `https://yuzimi.online` the canonical production URL everywhere the app needs an absolute storefront URL <!-- task:YUZ-LMVP-012 -->
+  - Code support is ready: canonical metadata and `PUBLIC_STORE_URL` were added in PR #7. Keep open until the production Vercel environment/domain is verified.
 
 **Milestone complete when:** both domain variants securely land on the production store and the apex domain is canonical.
 
@@ -61,7 +62,8 @@ Show only real art-print products and remove anything obviously unfinished from 
 - [x] Product cards show series/category and starting price <!-- task:YUZ-LMVP-014 -->
 - [x] Product pages support gallery images, descriptions, size selection and variant pricing <!-- task:YUZ-LMVP-015 -->
 - [x] Mobile layout, header/cart spacing and the 4 × 2 size grid are implemented <!-- task:YUZ-LMVP-016 -->
-- [ ] Remove remaining placeholder products, mock data, dead links and temporary customer-facing copy <!-- task:YUZ-LMVP-017 -->
+- [x] Remove remaining placeholder products, mock data, dead links and temporary customer-facing copy <!-- task:YUZ-LMVP-017 -->
+  - PR #7 removed mock Lookbook/Archive routes and launch-facing apparel/utility placeholder copy.
 - [ ] Confirm launch products have final title, series, description, images, alt text and prices <!-- task:YUZ-LMVP-018 -->
 - [ ] Verify all header, footer, FAQ, support and policy links on desktop and mobile <!-- task:YUZ-LMVP-019 -->
 
@@ -82,6 +84,7 @@ Prove the complete payment flow before switching to live charges.
 - [ ] Register and verify the deployed `/api/stripe-webhook` endpoint in Stripe test mode <!-- task:YUZ-LMVP-025 -->
 - [ ] Complete an end-to-end test purchase: checkout → payment → webhook HTTP 200 → paid order → cart cleared <!-- task:YUZ-LMVP-026 -->
 - [ ] Confirm duplicate/retried Stripe events cannot create duplicate paid orders <!-- task:YUZ-LMVP-027 -->
+  - PR #7 made the paid transition idempotent in code; keep open until a deployed Stripe retry test passes.
 - [ ] Activate/configure Stripe live mode only after the test flow passes <!-- task:YUZ-LMVP-028 -->
 - [ ] Make one controlled low-value live purchase and refund before opening the store publicly <!-- task:YUZ-LMVP-029 -->
 
@@ -116,8 +119,10 @@ Do the minimum responsible pre-launch work without turning the MVP into an enter
 - [ ] Publish final Privacy Policy, Terms of Service, Shipping Policy and Return/Refund Policy that match the real launch process <!-- task:YUZ-LMVP-039 -->
 - [ ] Add the business/support contact details required for the storefront <!-- task:YUZ-LMVP-040 -->
 - [ ] Rotate any production credential known to have appeared in a screenshot, chat, log or commit <!-- task:YUZ-LMVP-041 -->
-- [ ] Verify customer-facing/API errors do not expose passwords, cookies, database URLs or secret keys <!-- task:YUZ-LMVP-042 -->
-- [ ] Add basic abuse protection to admin login and checkout creation if not already present <!-- task:YUZ-LMVP-043 -->
+- [x] Verify customer-facing/API errors do not expose passwords, cookies, database URLs or secret keys <!-- task:YUZ-LMVP-042 -->
+  - PR #7 replaced unexpected server errors with generic customer-facing responses; CI passed.
+- [x] Add basic abuse protection to admin login and checkout creation if not already present <!-- task:YUZ-LMVP-043 -->
+  - PR #7 added lightweight throttling for admin login and checkout creation.
 - [ ] Run final desktop and mobile smoke tests from landing page through product → cart → checkout → paid order → email <!-- task:YUZ-LMVP-044 -->
 - [ ] Record the production deployment/commit used for launch and a simple rollback point <!-- task:YUZ-LMVP-045 -->
 - [ ] Open the store publicly only after all launch-blocking tasks above pass <!-- task:YUZ-LMVP-046 -->
