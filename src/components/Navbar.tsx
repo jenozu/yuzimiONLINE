@@ -13,15 +13,14 @@ export function Navbar() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchQuery(localSearch);
-    navigate(`/collections`);
+    navigate("/collections");
   };
 
   return (
     <header className="sticky top-0 z-40">
-      {/* Top Sakura Ribbon */}
       <div className="bg-cherry border-b-2 border-charcoal py-1.5 px-4 text-center text-[11px] font-black uppercase tracking-widest text-charcoal flex items-center justify-center gap-2">
         <Sparkles className="w-3.5 h-3.5 fill-charcoal" />
-        <span>Spring Sakura Drop // <span className="normal-case"><span className="lowercase">yuzimi</span>ONLINE</span> Primary Pink Collection Live // Free Shipping on All Orders (USA Only)</span>
+        <span>Collection 001 // Cherry Blossoms // Free Shipping on All Orders (USA Only)</span>
         <Sparkles className="w-3.5 h-3.5 fill-charcoal" />
       </div>
 
@@ -38,44 +37,23 @@ export function Navbar() {
             </Link>
 
             <div className="hidden md:flex items-center gap-6">
-              <Link 
-                to="/collections" 
-                className="text-sm font-black uppercase tracking-tight hover:text-cherry-dark hover:underline underline-offset-4 decoration-2 decoration-cherry transition-all"
-              >
-                Collections
+              <Link to="/collections" className="text-sm font-black uppercase tracking-tight hover:text-cherry-dark hover:underline underline-offset-4 decoration-2 decoration-cherry transition-all">
+                Art Prints
               </Link>
-              <Link 
-                to="/archive" 
-                className="text-sm font-black uppercase tracking-tight hover:text-cherry-dark hover:underline underline-offset-4 decoration-2 decoration-cherry transition-all"
-              >
-                Archive
-              </Link>
-              <Link 
-                to="/lookbook" 
-                className="text-sm font-black uppercase tracking-tight hover:text-cherry-dark hover:underline underline-offset-4 decoration-2 decoration-cherry transition-all"
-              >
-                Lookbook
-              </Link>
-              <Link 
-                to="/support" 
-                className="text-sm font-black uppercase tracking-tight hover:text-cherry-dark hover:underline underline-offset-4 decoration-2 decoration-cherry transition-all"
-              >
+              <Link to="/support" className="text-sm font-black uppercase tracking-tight hover:text-cherry-dark hover:underline underline-offset-4 decoration-2 decoration-cherry transition-all">
                 Support
               </Link>
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            <form 
-              onSubmit={handleSearchSubmit}
-              className="hidden sm:flex items-center border-2 border-charcoal bg-white h-10 px-3 gap-2 shadow-[2px_2px_0px_0px_#FFB7C5] focus-within:shadow-[3px_3px_0px_0px_#141414] transition-all"
-            >
+            <form onSubmit={handleSearchSubmit} className="hidden sm:flex items-center border-2 border-charcoal bg-white h-10 px-3 gap-2 shadow-[2px_2px_0px_0px_#FFB7C5] focus-within:shadow-[3px_3px_0px_0px_#141414] transition-all">
               <Search className="w-4 h-4 text-charcoal/60 shrink-0" />
               <input
                 type="text"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
-                placeholder="SEARCH SPECS..."
+                placeholder="SEARCH PRINTS..."
                 className="bg-transparent border-none outline-none text-xs font-black w-24 focus:w-36 transition-all uppercase placeholder:text-charcoal/40"
               />
             </form>
@@ -100,7 +78,6 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Navigation Drawer */}
       <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
     </header>
   );
