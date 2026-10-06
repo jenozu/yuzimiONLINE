@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { markPaid, ordersDb } from '../lib/checkout/orders.js';
+import { ensureOrdersTable, markPaid, ordersDb } from '../lib/checkout/orders.js';
+import { sendOrderConfirmation } from '../lib/order-email.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -18,35 +19,79 @@ async function rawBody(req: VercelRequest): Promise<Buffer> {
 
 export default async function webhook(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).end();
+
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!secret?.startsWith('whsec_')) return res.status(503).end();
+
   try {
     const raw = await rawBody(req);
     const signature = String(req.headers['stripe-signature'] || '');
     const timestamp = signature.match(/(?:^|,)t=(\d+)/)?.[1];
     const candidates = [...signature.matchAll(/(?:^|,)v1=([a-f0-9]{64})/g)].map(match => match[1]);
-    if (!timestamp || Math.abs(Date.now() / 1000 - Number(timestamp)) > 300 || !candidates.length) return res.status(400).end();
-    const expected = createHmac('sha256', secret).update(`${timestamp}.${raw.toString('utf8')}`).digest();
-    const valid = candidates.some(candidate => timingSafeEqual(Buffer.from(candidate, 'hex'), expected));
+
+    if (!timestamp || Math.abs(Date.now() / 1000 - Number(timestamp)) > 300 || !candidates.length) {
+      return res.status(400).end();
+    }
+
+    const expected = createHmac('sha256', secret)
+      .update(`${timestamp}.${raw.toString('utf8')}`)
+      .digest();
+
+    const valid = candidates.some(candidate => {
+      const supplied = Buffer.from(candidate, 'hex');
+      return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+    });
     if (!valid) return res.status(400).end();
+
     const event = JSON.parse(raw.toString('utf8'));
+    await ensureOrdersTable();
+
     if (!event.livemode && (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded')) {
       const session = event.data.object;
+
       if (session.metadata?.orderId && session.id?.startsWith('cs_test_')) {
-        const result = await markPaid(session.metadata.orderId, session);
-        if (result === 'rejected' && session.payment_status === 'paid') {
+        const paymentResult = await markPaid(session.metadata.orderId, session);
+        if (paymentResult === 'rejected' && session.payment_status === 'paid') {
           return res.status(500).json({ error: 'Order was not recorded; Stripe will retry.' });
+        }
+
+        const sql = ordersDb();
+        const rows = await sql`SELECT id, stripe_session_id, status, line_items, country, subtotal_cents,
+            shipping_cents, total_cents, customer_email, shipping_details,
+            confirmation_email_sent_at, confirmation_email_id
+          FROM checkout_orders
+          WHERE id = ${session.metadata.orderId} AND stripe_session_id = ${session.id}
+          LIMIT 1`;
+
+        const order = rows[0];
+        if (!order || order.status !== 'paid') {
+          return res.status(500).json({ error: 'Paid order could not be loaded; Stripe will retry.' });
+        }
+
+        if (!order.confirmation_email_sent_at) {
+          const email = await sendOrderConfirmation(order as any);
+          if (!email.skipped) {
+            await sql`UPDATE checkout_orders
+              SET confirmation_email_sent_at = COALESCE(confirmation_email_sent_at, now()),
+                  confirmation_email_id = COALESCE(confirmation_email_id, ${email.id})
+              WHERE id = ${order.id}`;
+            console.info('Order confirmation accepted by Resend:', email.id);
+          }
         }
       }
     }
+
     if (!event.livemode && event.type === 'checkout.session.async_payment_failed') {
       const session = event.data.object;
       if (session.metadata?.orderId) {
         const sql = ordersDb();
         await sql`UPDATE checkout_orders SET status = 'failed'
-          WHERE id = ${session.metadata.orderId} AND stripe_session_id = ${session.id} AND status = 'pending'`;
+          WHERE id = ${session.metadata.orderId}
+            AND stripe_session_id = ${session.id}
+            AND status = 'pending'`;
       }
     }
+
     return res.status(200).json({ received: true });
   } catch (error) {
     console.error('Stripe webhook error:', error);
