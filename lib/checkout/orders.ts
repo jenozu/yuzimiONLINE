@@ -21,8 +21,12 @@ export async function ensureOrdersTable() {
     customer_email text,
     shipping_details jsonb,
     created_at timestamptz NOT NULL DEFAULT now(),
-    paid_at timestamptz
+    paid_at timestamptz,
+    confirmation_email_sent_at timestamptz,
+    confirmation_email_id text
   )`;
+  await sql`ALTER TABLE checkout_orders ADD COLUMN IF NOT EXISTS confirmation_email_sent_at timestamptz`;
+  await sql`ALTER TABLE checkout_orders ADD COLUMN IF NOT EXISTS confirmation_email_id text`;
 }
 
 export async function markPaid(orderId: string, session: any): Promise<MarkPaidResult> {
