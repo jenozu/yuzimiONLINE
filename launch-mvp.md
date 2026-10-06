@@ -103,9 +103,13 @@ Ensure every paid order can actually be produced, shipped and communicated to th
 - [ ] Confirm launch shipping regions and validate their rates against the provider; reduce to US-only at launch if that is the fastest reliable option <!-- task:YUZ-LMVP-033 -->
 - [ ] Ensure fulfillment cannot begin unless the order is marked paid <!-- task:YUZ-LMVP-034 -->
 - [ ] Verify `yuzimi.online` in Resend with the required SPF/DKIM records <!-- task:YUZ-LMVP-035 -->
+  - Order-email code is merged in PR #8; DNS verification still requires the Resend/Namecheap setup.
 - [ ] Configure the production sender `yuzimiONLINE <orders@yuzimi.online>` and a restricted Resend key in Vercel <!-- task:YUZ-LMVP-036 -->
+  - Environment-variable support and setup documentation are merged; production values still need to be set in Vercel.
 - [ ] Complete a Stripe test purchase that sends the branded order-confirmation email exactly once <!-- task:YUZ-LMVP-037 -->
+  - PR #8 added persistent email-delivery state plus a Resend idempotency key; CI passes. Keep open until deployed delivery is tested.
 - [ ] Confirm there is a monitored customer-support email/contact path visible on the site <!-- task:YUZ-LMVP-038 -->
+  - PR #9 replaced the fake contact-form success state with a real Resend-backed endpoint. Set `SUPPORT_INBOX` in Vercel and test delivery before checking this off.
 
 **Milestone complete when:** a paid order can be produced/shipped and the buyer receives a reliable confirmation/support path.
 
