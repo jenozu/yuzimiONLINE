@@ -66,7 +66,7 @@ export function Footer() {
                   rel="noreferrer"
                   aria-label={`${social.label} — @yuzimiONLINE`}
                   title={`${social.label}: @yuzimiONLINE`}
-                  className="flex items-center justify-center text-white hover:text-cherry transition-colors"
+                  className="flex items-center justify-center text-cherry hover:text-white transition-colors"
                 >
                   {social.icon}
                 </a>
