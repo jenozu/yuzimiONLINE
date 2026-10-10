@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { Product, CartItem } from "../types";
 
 interface CartContextType {
@@ -23,12 +23,49 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const CART_STORAGE_KEY = "yuzimi-cart-v1";
+
+function loadInitialCart(): CartItem[] {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.filter((item): item is CartItem => {
+      return Boolean(
+        item &&
+        item.product &&
+        typeof item.product.id === "string" &&
+        typeof item.product.name === "string" &&
+        typeof item.product.price === "number" &&
+        typeof item.size === "string" &&
+        Number.isInteger(item.quantity) &&
+        item.quantity > 0
+      );
+    });
+  } catch {
+    return [];
+  }
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(loadInitialCart);
   const [isOpen, setIsOpen] = useState(false);
   const [wishlist, setWishlist] = useState<string[]>(["1", "2"]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // Cart remains usable in memory if storage is unavailable.
+    }
+  }, [items]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
