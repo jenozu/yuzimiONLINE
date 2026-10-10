@@ -1,0 +1,35 @@
+name: Deploy YUZIMI to Vercel
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yuzimi-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Trigger production deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Trigger Vercel Deploy Hook
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
+            echo "::error::VERCEL_DEPLOY_HOOK repository secret is not configured."
+            exit 1
+          fi
+
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            "$VERCEL_DEPLOY_HOOK" \
+            --output /tmp/vercel-deploy-response.json
+
+          echo "Vercel accepted the deployment request."
+          cat /tmp/vercel-deploy-response.json
