@@ -59,9 +59,10 @@ function loadStripeJs() {
 }
 
 type CheckoutForm = {
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
-  name: string;
   country: string;
   line1: string;
   line2: string;
@@ -71,9 +72,10 @@ type CheckoutForm = {
 };
 
 const initialForm: CheckoutForm = {
+  firstName: "",
+  lastName: "",
   email: "",
   phone: "",
-  name: "",
   country: "US",
   line1: "",
   line2: "",
@@ -177,7 +179,7 @@ export function Checkout() {
 
     setError("");
     const needsRegion = form.country === "US" || form.country === "CA";
-    if (!form.email.trim() || !form.name.trim() || !form.line1.trim() || !form.city.trim() || !form.postalCode.trim() || (needsRegion && !form.state.trim())) {
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.line1.trim() || !form.city.trim() || !form.postalCode.trim() || (needsRegion && !form.state.trim())) {
       setError("Please complete the required contact and shipping fields.");
       return;
     }
@@ -198,7 +200,8 @@ export function Checkout() {
             phone: form.phone.trim(),
           },
           shipping: {
-            name: form.name.trim(),
+            firstName: form.firstName.trim(),
+            lastName: form.lastName.trim(),
             country: form.country,
             line1: form.line1.trim(),
             line2: form.line2.trim(),
@@ -303,11 +306,21 @@ export function Checkout() {
                 <h2 className="text-sm font-black uppercase tracking-widest text-charcoal">Contact</h2>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <label className="space-y-1.5 text-xs font-black uppercase">
+                    First name *
+                    <input autoComplete="given-name" value={form.firstName} onChange={e => update("firstName", e.target.value)} className="w-full border-2 border-charcoal bg-white p-3 text-base normal-case font-medium" required />
+                  </label>
+                  <label className="space-y-1.5 text-xs font-black uppercase">
+                    Last name *
+                    <input autoComplete="family-name" value={form.lastName} onChange={e => update("lastName", e.target.value)} className="w-full border-2 border-charcoal bg-white p-3 text-base normal-case font-medium" required />
+                  </label>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <label className="space-y-1.5 text-xs font-black uppercase">
                     Email *
                     <input type="email" autoComplete="email" value={form.email} onChange={e => update("email", e.target.value)} className="w-full border-2 border-charcoal bg-white p-3 text-base normal-case font-medium" required />
                   </label>
                   <label className="space-y-1.5 text-xs font-black uppercase">
-                    Phone
+                    Phone number (optional)
                     <input type="tel" autoComplete="tel" value={form.phone} onChange={e => update("phone", e.target.value)} className="w-full border-2 border-charcoal bg-white p-3 text-base normal-case font-medium" />
                   </label>
                 </div>
@@ -322,28 +335,24 @@ export function Checkout() {
                   </select>
                 </label>
                 <label className="block space-y-1.5 text-xs font-black uppercase">
-                  Full name *
-                  <input autoComplete="shipping name" value={form.name} onChange={e => update("name", e.target.value)} className="w-full border-2 border-charcoal bg-white p-3 text-base normal-case font-medium" required />
-                </label>
-                <label className="block space-y-1.5 text-xs font-black uppercase">
-                  Address *
+                  Address Line 1 *
                   <input autoComplete="shipping address-line1" value={form.line1} onChange={e => update("line1", e.target.value)} className="w-full border-2 border-charcoal bg-white p-3 text-base normal-case font-medium" required />
                 </label>
                 <label className="block space-y-1.5 text-xs font-black uppercase">
-                  Apartment, suite, etc.
+                  Address Line 2 (optional)
                   <input autoComplete="shipping address-line2" value={form.line2} onChange={e => update("line2", e.target.value)} className="w-full border-2 border-charcoal bg-white p-3 text-base normal-case font-medium" />
                 </label>
                 <div className="grid sm:grid-cols-3 gap-4">
-                  <label className="space-y-1.5 text-xs font-black uppercase sm:col-span-1">
+                  <label className="space-y-1.5 text-xs font-black uppercase">
                     City *
                     <input autoComplete="shipping address-level2" value={form.city} onChange={e => update("city", e.target.value)} className="w-full border-2 border-charcoal bg-white p-3 text-base normal-case font-medium" required />
                   </label>
                   <label className="space-y-1.5 text-xs font-black uppercase">
-                    {form.country === "CA" ? "Province *" : form.country === "US" ? "State *" : "Region"}
+                    State/Province *
                     <input autoComplete="shipping address-level1" value={form.state} onChange={e => update("state", e.target.value)} className="w-full border-2 border-charcoal bg-white p-3 text-base normal-case font-medium" required={form.country === "US" || form.country === "CA"} />
                   </label>
                   <label className="space-y-1.5 text-xs font-black uppercase">
-                    {form.country === "US" ? "ZIP code *" : "Postal code *"}
+                    Postal/ZIP Code *
                     <input autoComplete="shipping postal-code" value={form.postalCode} onChange={e => update("postalCode", e.target.value)} className="w-full border-2 border-charcoal bg-white p-3 text-base normal-case font-medium" required />
                   </label>
                 </div>
@@ -360,7 +369,7 @@ export function Checkout() {
             <div className="space-y-6">
               <div className="bg-[#FFF0F4] border-2 border-charcoal p-4 flex items-start justify-between gap-4">
                 <div className="text-sm text-charcoal">
-                  <p className="font-black">{form.name}</p>
+                  <p className="font-black">{form.firstName} {form.lastName}</p>
                   <p>{form.line1}{form.line2 ? `, ${form.line2}` : ""}</p>
                   <p>{form.city}{form.state ? `, ${form.state}` : ""} {form.postalCode}</p>
                   <p>{destinations[form.country]}</p>
