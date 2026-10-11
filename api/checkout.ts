@@ -5,6 +5,16 @@ import { shippingCents } from '../lib/checkout/shipping.js';
 
 type RequestedItem = { id: string; size: string; quantity: number };
 type RateBucket = { count: number; resetAt: number };
+type ShippingInput = {
+  name?: string;
+  country?: string;
+  line1?: string;
+  line2?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+};
+type ContactInput = { email?: string; phone?: string };
 
 const checkoutBuckets = new Map<string, RateBucket>();
 const CHECKOUT_WINDOW_MS = 10 * 60 * 1000;
@@ -29,19 +39,12 @@ function allowCheckout(req: VercelRequest) {
   return true;
 }
 
-function storefrontOrigin(req: VercelRequest) {
-  const configured = process.env.PUBLIC_STORE_URL?.trim();
-  if (configured) {
-    const url = new URL(configured);
-    if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) {
-      throw new Error('Invalid storefront URL configuration.');
-    }
-    return url.origin;
-  }
+function clean(value: unknown, max: number) {
+  return String(value || '').trim().slice(0, max);
+}
 
-  const host = Array.isArray(req.headers.host) ? req.headers.host[0] : req.headers.host;
-  if (!host || !/^[a-z0-9.-]+(?::\d+)?$/i.test(host)) throw new Error('Invalid checkout host.');
-  return `https://${host}`;
+function validEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254;
 }
 
 export default async function checkout(req: VercelRequest, res: VercelResponse) {
@@ -49,17 +52,36 @@ export default async function checkout(req: VercelRequest, res: VercelResponse) 
   if (!allowCheckout(req)) return res.status(429).json({ error: 'Too many checkout attempts. Please wait a few minutes and try again.' });
 
   const secret = process.env.STRIPE_SECRET_KEY;
-  if (!secret?.startsWith('sk_test_')) return res.status(503).json({ error: 'Checkout is temporarily unavailable.' });
+  const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  if (!secret?.startsWith('sk_test_') || !publishableKey?.startsWith('pk_test_')) {
+    return res.status(503).json({ error: 'Checkout is temporarily unavailable.' });
+  }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const country = String(body?.country || '').toUpperCase();
     const items = body?.items as RequestedItem[];
+    const shipping = (body?.shipping || {}) as ShippingInput;
+    const contact = (body?.contact || {}) as ContactInput;
 
     if (!Array.isArray(items) || items.length < 1 || items.length > 30) {
       return res.status(400).json({ error: 'Add 1–30 print variants to the cart.' });
     }
+
+    const country = clean(shipping.country, 2).toUpperCase();
+    const name = clean(shipping.name, 100);
+    const line1 = clean(shipping.line1, 160);
+    const line2 = clean(shipping.line2, 160);
+    const city = clean(shipping.city, 100);
+    const state = clean(shipping.state, 100);
+    const postalCode = clean(shipping.postalCode, 32);
+    const email = clean(contact.email, 254).toLowerCase();
+    const phone = clean(contact.phone, 40);
+
     if (!/^[A-Z]{2}$/.test(country)) return res.status(400).json({ error: 'Select a shipping destination.' });
+    if (!validEmail(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
+    if (!name || !line1 || !city || !postalCode || ((country === 'US' || country === 'CA') && !state)) {
+      return res.status(400).json({ error: 'Complete the required shipping address fields.' });
+    }
 
     const count = items.reduce((sum, item) => sum + item.quantity, 0);
     if (!items.every(item =>
@@ -99,60 +121,92 @@ export default async function checkout(req: VercelRequest, res: VercelResponse) 
 
     const subtotal = lines.reduce((sum, line) => sum + line.price_cents * line.quantity, 0);
     const total = subtotal + freight;
-    if (!Number.isSafeInteger(total) || total > 99999999) return res.status(400).json({ error: 'Cart total is invalid.' });
+    if (!Number.isSafeInteger(total) || total < 50 || total > 99999999) {
+      return res.status(400).json({ error: 'Cart total is invalid.' });
+    }
 
     await ensureOrdersTable();
     const orderId = randomUUID();
-    await sql`INSERT INTO checkout_orders (id, line_items, country, subtotal_cents, shipping_cents, total_cents)
-      VALUES (${orderId}, ${JSON.stringify(lines)}::jsonb, ${country}, ${subtotal}, ${freight}, ${total})`;
+    const shippingDetails = {
+      name,
+      phone: phone || null,
+      address: {
+        line1,
+        line2: line2 || null,
+        city,
+        state: state || null,
+        postal_code: postalCode,
+        country,
+      },
+    };
 
-    const origin = storefrontOrigin(req);
+    await sql`INSERT INTO checkout_orders
+      (id, line_items, country, subtotal_cents, shipping_cents, total_cents, customer_email, shipping_details)
+      VALUES (
+        ${orderId},
+        ${JSON.stringify(lines)}::jsonb,
+        ${country},
+        ${subtotal},
+        ${freight},
+        ${total},
+        ${email},
+        ${JSON.stringify(shippingDetails)}::jsonb
+      )`;
+
     const params = new URLSearchParams({
-      mode: 'payment',
+      amount: String(total),
+      currency: 'usd',
       'payment_method_types[0]': 'card',
-      success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/checkout/cancel`,
-      client_reference_id: orderId,
+      receipt_email: email,
       'metadata[orderId]': orderId,
       'metadata[country]': country,
-      'shipping_address_collection[allowed_countries][0]': country,
-      'shipping_options[0][shipping_rate_data][type]': 'fixed_amount',
-      'shipping_options[0][shipping_rate_data][fixed_amount][amount]': String(freight),
-      'shipping_options[0][shipping_rate_data][fixed_amount][currency]': 'usd',
-      'shipping_options[0][shipping_rate_data][display_name]': country === 'US' ? 'Free US shipping' : 'Standard shipping',
+      'shipping[name]': name,
+      'shipping[address][line1]': line1,
+      'shipping[address][city]': city,
+      'shipping[address][postal_code]': postalCode,
+      'shipping[address][country]': country,
     });
+    if (line2) params.set('shipping[address][line2]', line2);
+    if (state) params.set('shipping[address][state]', state);
+    if (phone) params.set('shipping[phone]', phone);
 
-    lines.forEach((line, i) => {
-      params.set(`line_items[${i}][price_data][currency]`, 'usd');
-      params.set(`line_items[${i}][price_data][unit_amount]`, String(line.price_cents));
-      params.set(`line_items[${i}][price_data][product_data][name]`, `${line.name} — ${line.size}`);
-      params.set(`line_items[${i}][quantity]`, String(line.quantity));
-    });
-
-    const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+    const response = await fetch('https://api.stripe.com/v1/payment_intents', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${secret}`,
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Idempotency-Key': orderId
+        'Idempotency-Key': orderId,
       },
       body: params,
     });
 
-    const session = await response.json() as any;
-    if (!response.ok || !session.id?.startsWith('cs_test_') || !session.url) {
-      console.error('Stripe test checkout creation failed:', session.error?.message || response.status);
-      return res.status(502).json({ error: 'Could not start Stripe checkout. Please try again.' });
+    const paymentIntent = await response.json() as any;
+    if (!response.ok || !paymentIntent.id?.startsWith('pi_') || !paymentIntent.client_secret) {
+      console.error('Stripe test payment intent creation failed:', paymentIntent.error?.message || response.status);
+      await sql`UPDATE checkout_orders SET status = 'failed' WHERE id = ${orderId} AND status = 'pending'`;
+      return res.status(502).json({ error: 'Could not prepare payment. Please try again.' });
     }
 
-    await sql`UPDATE checkout_orders SET stripe_session_id = ${session.id} WHERE id = ${orderId}`;
-    return res.status(200).json({ url: session.url });
+    await sql`UPDATE checkout_orders
+      SET stripe_payment_intent_id = ${paymentIntent.id}
+      WHERE id = ${orderId}`;
+
+    return res.status(200).json({
+      clientSecret: paymentIntent.client_secret,
+      publishableKey,
+      paymentIntentId: paymentIntent.id,
+      orderId,
+      subtotalCents: subtotal,
+      shippingCents: freight,
+      totalCents: total,
+      currency: 'USD',
+    });
   } catch (error) {
     console.error('Checkout error:', error);
     const message = error instanceof Error ? error.message : '';
-    const clientError = /^(A print variant|Invalid cart|Cart total|Add 1|Select a shipping)/.test(message);
+    const clientError = /^(A print variant|Invalid cart|Cart total|Add 1|Select a shipping|Complete the required|Enter a valid)/.test(message);
     return res.status(clientError ? 400 : 500).json({
-      error: clientError ? message : 'Could not start checkout. Please try again.'
+      error: clientError ? message : 'Could not prepare payment. Please try again.',
     });
   }
 }
