@@ -379,7 +379,13 @@ export function Checkout() {
               </div>
 
               <div>
-                <h2 className="text-sm font-black uppercase tracking-widest text-charcoal mb-4">Payment method</h2>
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <h2 className="text-sm font-black uppercase tracking-widest text-charcoal">Payment method</h2>
+                  <div className="flex items-center gap-2 text-xs font-bold text-charcoal/65">
+                    <LockKeyhole className="w-4 h-4" />
+                    Securely processed by Stripe
+                  </div>
+                </div>
                 <div ref={paymentMountRef} className="min-h-36 border-2 border-charcoal p-4 bg-white" />
               </div>
 
@@ -389,7 +395,7 @@ export function Checkout() {
                 {paying ? "Processing…" : `Pay $${displayedTotal.toFixed(2)} USD`}
               </button>
               <p className="text-xs text-center text-charcoal/60 font-semibold">
-                Card details stay inside Stripe's secure payment fields. YUZIMI never receives your card number.
+                Payments are securely processed by Stripe. YUZIMI never receives or stores your card number.
               </p>
             </div>
           )}
