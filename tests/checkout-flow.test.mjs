@@ -30,3 +30,12 @@ test("status and webhook handlers support PaymentIntent completion", () => {
   assert.match(webhookApi, /payment_intent\.succeeded/);
   assert.match(webhookApi, /payment_intent\.payment_failed/);
 });
+
+test("checkout collects clear customer and address fields", () => {
+  assert.match(checkoutPage, /First name \*/);
+  assert.match(checkoutPage, /Last name \*/);
+  assert.match(checkoutPage, /Phone number \(optional\)/);
+  assert.match(checkoutPage, /Address Line 2 \(optional\)/);
+  assert.match(checkoutPage, /State\/Province \*/);
+  assert.match(checkoutPage, /Postal\/ZIP Code \*/);
+});
