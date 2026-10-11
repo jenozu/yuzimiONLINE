@@ -30,8 +30,8 @@ Use the recovered storefront as the launch baseline and verify the core buying e
 - [x] Cloudflare R2 is integrated for product images <!-- task:YUZ-LMVP-003 -->
 - [x] Password-protected admin and product-management APIs exist <!-- task:YUZ-LMVP-004 -->
 - [x] Product variants support the eight launch print sizes and per-size pricing <!-- task:YUZ-LMVP-005 -->
-- [ ] Verify the deployed production catalog loads real products, including the existing Bayonetta listing <!-- task:YUZ-LMVP-006 -->
-- [ ] Verify deployed admin login, product editing, R2 images, add-to-cart and cart refresh behavior <!-- task:YUZ-LMVP-007 -->
+- [x] Verify the deployed production catalog loads real products, including the existing Bayonetta listing <!-- task:YUZ-LMVP-006 -->
+- [x] Verify deployed admin login, product editing, R2 images, add-to-cart and cart refresh behavior <!-- task:YUZ-LMVP-007 -->
 
 **Milestone complete when:** the recovered deployed storefront can be managed and shopped without a broken core flow.
 
