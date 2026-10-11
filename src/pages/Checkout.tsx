@@ -93,6 +93,7 @@ export function Checkout() {
   const [clientSecret, setClientSecret] = useState("");
   const [publishableKey, setPublishableKey] = useState("");
   const [paymentIntentId, setPaymentIntentId] = useState("");
+  const [paymentReady, setPaymentReady] = useState(false);
   const [serverTotalCents, setServerTotalCents] = useState<number | null>(null);
   const [serverShippingCents, setServerShippingCents] = useState<number | null>(null);
   const paymentMountRef = useRef<HTMLDivElement | null>(null);
@@ -147,6 +148,7 @@ export function Checkout() {
         stripeRef.current = stripe;
         elementsRef.current = elements;
         paymentElementRef.current = localElement;
+        setPaymentReady(true);
       } catch (caught) {
         if (active) setError(caught instanceof Error ? caught.message : "Could not load secure payment fields.");
       }
@@ -157,6 +159,7 @@ export function Checkout() {
     return () => {
       active = false;
       if (localElement?.destroy) localElement.destroy();
+      setPaymentReady(false);
       paymentElementRef.current = null;
       elementsRef.current = null;
       stripeRef.current = null;
@@ -256,6 +259,7 @@ export function Checkout() {
     setClientSecret("");
     setPublishableKey("");
     setPaymentIntentId("");
+    setPaymentReady(false);
     setServerTotalCents(null);
     setServerShippingCents(null);
     setError("");
@@ -372,7 +376,7 @@ export function Checkout() {
 
               {error && <p role="alert" className="text-sm font-bold text-red-700">{error}</p>}
 
-              <button type="button" onClick={submitPayment} disabled={paying || !stripeRef.current} className="w-full btn-brutal py-4 text-sm disabled:opacity-60">
+              <button type="button" onClick={submitPayment} disabled={paying || !paymentReady} className="w-full btn-brutal py-4 text-sm disabled:opacity-60">
                 {paying ? "Processing…" : `Pay $${displayedTotal.toFixed(2)} USD`}
               </button>
               <p className="text-xs text-center text-charcoal/60 font-semibold">
