@@ -24,5 +24,7 @@ jobs:
         run: node --test tests/routing.test.mjs
       - name: Order email tests
         run: node --import tsx --test tests/order-email.test.ts
+      - name: Embedded checkout regression tests
+        run: node --test tests/checkout-flow.test.mjs
       - name: Production build
         run: npm run build
