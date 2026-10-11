@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { ensureOrdersTable, markPaid, ordersDb } from '../lib/checkout/orders.js';
+import { ensureOrdersTable, markPaid, markPaymentIntentPaid, ordersDb } from '../lib/checkout/orders.js';
 import { sendOrderConfirmation } from '../lib/order-email.js';
 
 export const config = { api: { bodyParser: false } };
@@ -15,6 +15,39 @@ async function rawBody(req: VercelRequest): Promise<Buffer> {
     chunks.push(bytes);
   }
   return Buffer.concat(chunks);
+}
+
+async function sendConfirmationIfNeeded(orderId: string, stripeField: 'stripe_session_id' | 'stripe_payment_intent_id', stripeId: string) {
+  const sql = ordersDb();
+  const rows = stripeField === 'stripe_session_id'
+    ? await sql`SELECT id, stripe_session_id, stripe_payment_intent_id, status, line_items, country,
+        subtotal_cents, shipping_cents, total_cents, customer_email, shipping_details,
+        confirmation_email_sent_at, confirmation_email_id
+      FROM checkout_orders
+      WHERE id = ${orderId} AND stripe_session_id = ${stripeId}
+      LIMIT 1`
+    : await sql`SELECT id, stripe_session_id, stripe_payment_intent_id, status, line_items, country,
+        subtotal_cents, shipping_cents, total_cents, customer_email, shipping_details,
+        confirmation_email_sent_at, confirmation_email_id
+      FROM checkout_orders
+      WHERE id = ${orderId} AND stripe_payment_intent_id = ${stripeId}
+      LIMIT 1`;
+
+  const order = rows[0];
+  if (!order || order.status !== 'paid') {
+    throw new Error('Paid order could not be loaded.');
+  }
+
+  if (!order.confirmation_email_sent_at) {
+    const email = await sendOrderConfirmation(order as any);
+    if (!email.skipped) {
+      await sql`UPDATE checkout_orders
+        SET confirmation_email_sent_at = COALESCE(confirmation_email_sent_at, now()),
+            confirmation_email_id = COALESCE(confirmation_email_id, ${email.id})
+        WHERE id = ${order.id}`;
+      console.info('Order confirmation accepted by Resend:', email.id);
+    }
+  }
 }
 
 export default async function webhook(req: VercelRequest, res: VercelResponse) {
@@ -46,6 +79,32 @@ export default async function webhook(req: VercelRequest, res: VercelResponse) {
     const event = JSON.parse(raw.toString('utf8'));
     await ensureOrdersTable();
 
+    if (!event.livemode && event.type === 'payment_intent.succeeded') {
+      const paymentIntent = event.data.object;
+      const orderId = paymentIntent.metadata?.orderId;
+
+      if (orderId && paymentIntent.id?.startsWith('pi_')) {
+        const paymentResult = await markPaymentIntentPaid(orderId, paymentIntent);
+        if (paymentResult === 'rejected') {
+          return res.status(500).json({ error: 'Order was not recorded; Stripe will retry.' });
+        }
+        await sendConfirmationIfNeeded(orderId, 'stripe_payment_intent_id', paymentIntent.id);
+      }
+    }
+
+    if (!event.livemode && event.type === 'payment_intent.payment_failed') {
+      const paymentIntent = event.data.object;
+      const orderId = paymentIntent.metadata?.orderId;
+      if (orderId && paymentIntent.id?.startsWith('pi_')) {
+        const sql = ordersDb();
+        await sql`UPDATE checkout_orders SET status = 'failed'
+          WHERE id = ${orderId}
+            AND stripe_payment_intent_id = ${paymentIntent.id}
+            AND status = 'pending'`;
+      }
+    }
+
+    // Keep accepting the previous hosted Checkout flow during the transition.
     if (!event.livemode && (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded')) {
       const session = event.data.object;
 
@@ -54,30 +113,7 @@ export default async function webhook(req: VercelRequest, res: VercelResponse) {
         if (paymentResult === 'rejected' && session.payment_status === 'paid') {
           return res.status(500).json({ error: 'Order was not recorded; Stripe will retry.' });
         }
-
-        const sql = ordersDb();
-        const rows = await sql`SELECT id, stripe_session_id, status, line_items, country, subtotal_cents,
-            shipping_cents, total_cents, customer_email, shipping_details,
-            confirmation_email_sent_at, confirmation_email_id
-          FROM checkout_orders
-          WHERE id = ${session.metadata.orderId} AND stripe_session_id = ${session.id}
-          LIMIT 1`;
-
-        const order = rows[0];
-        if (!order || order.status !== 'paid') {
-          return res.status(500).json({ error: 'Paid order could not be loaded; Stripe will retry.' });
-        }
-
-        if (!order.confirmation_email_sent_at) {
-          const email = await sendOrderConfirmation(order as any);
-          if (!email.skipped) {
-            await sql`UPDATE checkout_orders
-              SET confirmation_email_sent_at = COALESCE(confirmation_email_sent_at, now()),
-                  confirmation_email_id = COALESCE(confirmation_email_id, ${email.id})
-              WHERE id = ${order.id}`;
-            console.info('Order confirmation accepted by Resend:', email.id);
-          }
-        }
+        await sendConfirmationIfNeeded(session.metadata.orderId, 'stripe_session_id', session.id);
       }
     }
 

@@ -20,7 +20,7 @@ test("Every non-root React Router page supports direct visits and payment redire
   for (const route of [
     "/admin", "/collections", "/lookbook", "/archive", "/support",
     "/privacy", "/terms", "/security", "/product/bayonetta",
-    "/checkout/success", "/checkout/cancel"
+    "/checkout", "/checkout/success", "/checkout/cancel"
   ]) {
     assert.equal(rewritesToIndex(route), true, `Missing SPA route: ${route}`);
   }

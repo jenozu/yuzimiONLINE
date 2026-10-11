@@ -12,6 +12,7 @@ export async function ensureOrdersTable() {
   await sql`CREATE TABLE IF NOT EXISTS checkout_orders (
     id text PRIMARY KEY,
     stripe_session_id text UNIQUE,
+    stripe_payment_intent_id text UNIQUE,
     status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'failed')),
     line_items jsonb NOT NULL,
     country text NOT NULL,
@@ -25,8 +26,11 @@ export async function ensureOrdersTable() {
     confirmation_email_sent_at timestamptz,
     confirmation_email_id text
   )`;
+  await sql`ALTER TABLE checkout_orders ADD COLUMN IF NOT EXISTS stripe_payment_intent_id text`;
   await sql`ALTER TABLE checkout_orders ADD COLUMN IF NOT EXISTS confirmation_email_sent_at timestamptz`;
   await sql`ALTER TABLE checkout_orders ADD COLUMN IF NOT EXISTS confirmation_email_id text`;
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS checkout_orders_payment_intent_idx
+    ON checkout_orders (stripe_payment_intent_id) WHERE stripe_payment_intent_id IS NOT NULL`;
 }
 
 export async function markPaid(orderId: string, session: any): Promise<MarkPaidResult> {
@@ -56,6 +60,48 @@ export async function markPaid(orderId: string, session: any): Promise<MarkPaidR
   const existing = await sql`SELECT id FROM checkout_orders
     WHERE id = ${orderId} AND stripe_session_id = ${session.id}
       AND total_cents = ${session.amount_total} AND country = ${session.metadata.country}
+      AND status = 'paid'
+    LIMIT 1`;
+
+  return existing.length > 0 ? 'already_paid' : 'rejected';
+}
+
+export async function markPaymentIntentPaid(orderId: string, paymentIntent: any): Promise<MarkPaidResult> {
+  if (
+    paymentIntent.status !== 'succeeded' ||
+    paymentIntent.livemode !== false ||
+    !paymentIntent.id?.startsWith('pi_') ||
+    paymentIntent.currency !== 'usd' ||
+    paymentIntent.metadata?.orderId !== orderId
+  ) return 'rejected';
+
+  const sql = ordersDb();
+  const email = paymentIntent.receipt_email || null;
+  const shipping = paymentIntent.shipping || null;
+  if (!shipping?.address || shipping.address.country !== paymentIntent.metadata.country) return 'rejected';
+
+  const amountReceived = Number(paymentIntent.amount_received ?? paymentIntent.amount);
+  if (!Number.isSafeInteger(amountReceived)) return 'rejected';
+
+  const rows = await sql`UPDATE checkout_orders
+    SET status = 'paid',
+        paid_at = COALESCE(paid_at, now()),
+        customer_email = COALESCE(${email}, customer_email),
+        shipping_details = COALESCE(${JSON.stringify(shipping)}::jsonb, shipping_details)
+    WHERE id = ${orderId}
+      AND stripe_payment_intent_id = ${paymentIntent.id}
+      AND total_cents = ${amountReceived}
+      AND country = ${paymentIntent.metadata.country}
+      AND status = 'pending'
+    RETURNING id`;
+
+  if (rows.length > 0) return 'paid';
+
+  const existing = await sql`SELECT id FROM checkout_orders
+    WHERE id = ${orderId}
+      AND stripe_payment_intent_id = ${paymentIntent.id}
+      AND total_cents = ${amountReceived}
+      AND country = ${paymentIntent.metadata.country}
       AND status = 'paid'
     LIMIT 1`;
 

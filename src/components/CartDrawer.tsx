@@ -2,46 +2,10 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { Link } from "react-router-dom";
-import { useState } from "react";
-import { shippingCents } from "../../lib/checkout/shipping";
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, removeFromCart, updateQuantity, subtotal, totalCount } = useCart();
 
-  const [destination, setDestination] = useState("US");
-  const [startingCheckout, setStartingCheckout] = useState(false);
-  const [checkoutError, setCheckoutError] = useState("");
-  const destinations: Record<string, string> = {
-    US: "United States", CA: "Canada", GB: "United Kingdom",
-    AT: "Austria", BE: "Belgium", FR: "France", DE: "Germany", IE: "Ireland",
-    IT: "Italy", NL: "Netherlands", ES: "Spain", SE: "Sweden",
-    CH: "Switzerland", NO: "Norway", DK: "Denmark", FI: "Finland",
-    IS: "Iceland", LI: "Liechtenstein", LV: "Latvia", LT: "Lithuania", EE: "Estonia",
-  };
-  const shippingCost = totalCount ? shippingCents(destination, totalCount) / 100 : 0;
-
-  const handleCheckout = async () => {
-    if (startingCheckout) return;
-    setStartingCheckout(true);
-    setCheckoutError("");
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ country: destination, items: items.map(item => ({
-          id: item.product.id, size: item.size, quantity: item.quantity,
-        })) }),
-      });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error || "Could not start test checkout.");
-      const url = new URL(body.url);
-      if (url.protocol !== "https:" || url.hostname !== "checkout.stripe.com") throw new Error("Stripe returned an unexpected checkout URL.");
-      window.location.assign(url.toString());
-    } catch (error) {
-      setCheckoutError(error instanceof Error ? error.message : "Could not start test checkout.");
-      setStartingCheckout(false);
-    }
-  };
 
   return (
     <AnimatePresence>
@@ -90,7 +54,7 @@ export function CartDrawer() {
             </div>
 
             <div className="bg-[#EEF8FD] border-b-3 border-charcoal px-6 py-3 text-[11px] font-black uppercase tracking-wider text-charcoal">
-              US shipping is free. Select your destination below for other rates.
+              US shipping is free. Shipping for other destinations is calculated at checkout.
             </div>
 
             {/* Cart Items List */}
@@ -178,10 +142,6 @@ export function CartDrawer() {
             {/* Footer / Summary */}
             {items.length > 0 && (
               <div className="p-6 bg-white border-t-3 border-charcoal space-y-4">
-                <label className="block text-xs font-black uppercase" htmlFor="shipping-destination">Ship to</label>
-                <select id="shipping-destination" value={destination} onChange={(event) => setDestination(event.target.value)} className="w-full border-2 border-charcoal bg-white p-2 text-sm">
-                  {Object.entries(destinations).map(([code, name]) => <option key={code} value={code}>{name}</option>)}
-                </select>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between font-bold text-charcoal/70">
                     <span>Subtotal</span>
@@ -189,29 +149,23 @@ export function CartDrawer() {
                   </div>
                   <div className="flex justify-between font-bold text-charcoal/70">
                     <span>Shipping</span>
-                    <span>{shippingCost === 0 ? "FREE" : `$${shippingCost.toFixed(2)}`}</span>
-                  </div>
-                  <div className="flex justify-between font-black text-charcoal border-t border-charcoal/10 pt-2">
-                    <span>Estimated total</span>
-                    <span>${(subtotal + shippingCost).toFixed(2)}</span>
+                    <span>Calculated at checkout</span>
                   </div>
                 </div>
 
                 <div className="space-y-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={handleCheckout}
-                    disabled={startingCheckout}
+                  <Link
+                    to="/checkout"
+                    onClick={closeCart}
                     aria-describedby="checkout-status"
                     className="w-full btn-brutal text-sm py-4 flex items-center justify-center gap-2 hover:bg-sky-blue transition-colors"
                   >
-                    <span>{startingCheckout ? "Opening test checkout…" : "Checkout"}</span>
+                    <span>Checkout</span>
                     <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </Link>
                   <p id="checkout-status" className="text-xs text-center text-charcoal/70">
-                    Test mode: no real payment will be charged or order fulfilled.
+                    Enter shipping and payment securely on YUZIMI. Test mode: no real charge.
                   </p>
-                  {checkoutError && <p role="alert" className="text-xs text-red-700 font-bold">{checkoutError}</p>}
 
                   <button
                     onClick={closeCart}
