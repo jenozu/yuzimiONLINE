@@ -54,7 +54,7 @@ export function CartDrawer() {
             </div>
 
             <div className="bg-[#EEF8FD] border-b-3 border-charcoal px-6 py-3 text-[11px] font-black uppercase tracking-wider text-charcoal">
-              US shipping is free. Select your destination below for other rates.
+              US shipping is free. Shipping for other destinations is calculated at checkout.
             </div>
 
             {/* Cart Items List */}
