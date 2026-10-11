@@ -6,7 +6,8 @@ import { shippingCents } from '../lib/checkout/shipping.js';
 type RequestedItem = { id: string; size: string; quantity: number };
 type RateBucket = { count: number; resetAt: number };
 type ShippingInput = {
-  name?: string;
+  firstName?: string;
+  lastName?: string;
   country?: string;
   line1?: string;
   line2?: string;
@@ -68,7 +69,9 @@ export default async function checkout(req: VercelRequest, res: VercelResponse) 
     }
 
     const country = clean(shipping.country, 2).toUpperCase();
-    const name = clean(shipping.name, 100);
+    const firstName = clean(shipping.firstName, 60);
+    const lastName = clean(shipping.lastName, 60);
+    const name = `${firstName} ${lastName}`.trim();
     const line1 = clean(shipping.line1, 160);
     const line2 = clean(shipping.line2, 160);
     const city = clean(shipping.city, 100);
@@ -79,7 +82,7 @@ export default async function checkout(req: VercelRequest, res: VercelResponse) 
 
     if (!/^[A-Z]{2}$/.test(country)) return res.status(400).json({ error: 'Select a shipping destination.' });
     if (!validEmail(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
-    if (!name || !line1 || !city || !postalCode || ((country === 'US' || country === 'CA') && !state)) {
+    if (!firstName || !lastName || !line1 || !city || !postalCode || ((country === 'US' || country === 'CA') && !state)) {
       return res.status(400).json({ error: 'Complete the required shipping address fields.' });
     }
 
