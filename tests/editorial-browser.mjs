@@ -17,20 +17,29 @@ try {
   const response=await page.goto(base,{waitUntil:"domcontentloaded",timeout:45000});
   assert.equal(response?.status(),200,"Homepage should return HTTP 200");
   await page.locator("h1").first().waitFor({timeout:15000});
+  await page.locator(".animate-pulse").first().waitFor({state:"hidden",timeout:25000});
+  await page.waitForLoadState("networkidle",{timeout:20000});
+  await page.locator("img").evaluateAll(images=>Promise.all(images.map(img=>img.decode().catch(()=>{}))));
   assert.match(await page.locator("body").innerText(),/EDITORIAL DESIGN PREVIEW|EDITORIAL PREVIEW/i);
   await page.screenshot({path:"artifacts/editorial/"+view.name+"-home.png",fullPage:true,animations:"disabled"});
   await page.goto(base+"/collections",{waitUntil:"domcontentloaded",timeout:45000});
   await page.locator("h1").first().waitFor();
+  await page.locator(".animate-pulse").first().waitFor({state:"hidden",timeout:25000});
+  await page.waitForLoadState("networkidle",{timeout:20000});
+  await page.locator("img").evaluateAll(images=>Promise.all(images.map(img=>img.decode().catch(()=>{}))));
   const products=await page.locator("a[href^='/product/']").count();
   await page.screenshot({path:"artifacts/editorial/"+view.name+"-collection.png",fullPage:true,animations:"disabled"});
   if(view.name==="mobile"){
     await page.getByRole("button",{name:"Open navigation menu"}).click();
     assert.ok(await page.getByRole("dialog",{name:"Navigation"}).isVisible());
     await page.getByRole("button",{name:"Close menu"}).click();
+    await page.getByRole("dialog",{name:"Navigation"}).waitFor({state:"hidden",timeout:15000});
   }
   if(products>0){
     await page.locator("a[href^='/product/']").first().click();
     await page.locator("h1").first().waitFor();
+    await page.waitForLoadState("networkidle",{timeout:20000});
+    await page.locator("img").evaluateAll(images=>Promise.all(images.map(img=>img.decode().catch(()=>{}))));
     const priceBefore=await page.getByRole("button",{name:/Add to cart/}).textContent();
     await page.getByRole("button",{name:/24 × 36 in/}).click();
     const priceAfter=await page.getByRole("button",{name:/Add to cart/}).textContent();
