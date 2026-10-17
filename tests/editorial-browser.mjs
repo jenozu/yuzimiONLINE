@@ -40,6 +40,8 @@ try {
     assert.ok(await page.getByRole("dialog",{name:"Shopping bag"}).isVisible());
     await page.screenshot({path:"artifacts/editorial/"+view.name+"-cart.png",fullPage:true,animations:"disabled"});
     await page.getByRole("link",{name:/Continue to checkout/i}).click();
+    await page.waitForURL("**/checkout", {timeout:15000});
+    await page.getByRole("heading",{name:/THE FINAL/i}).waitFor({timeout:15000});
     assert.match(await page.locator("body").innerText(),/Payments disabled in preview/i);
     await page.screenshot({path:"artifacts/editorial/"+view.name+"-checkout.png",fullPage:true,animations:"disabled"});
     const catalogResponse=await page.request.get(base+"/api/products");
