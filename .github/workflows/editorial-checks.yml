@@ -1,0 +1,46 @@
+name: Editorial Preview Checks
+on:
+  push:
+    branches: [feat/yuzimi-editorial-redesign]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+        env:
+          VITE_EDITORIAL_PREVIEW: 'true'
+      - run: node --test tests/editorial-preview.test.mjs tests/routing.test.mjs tests/checkout-flow.test.mjs
+      - run: npx tsx --test tests/order-email.test.ts
+  browser:
+    runs-on: ubuntu-latest
+    needs: verify
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm install --no-save playwright@1.55.1
+      - run: npx playwright install --with-deps chromium
+      - name: Verify live storefront and take screenshots
+        run: node tests/editorial-browser.mjs
+        env:
+          EDITORIAL_PREVIEW_URL: https://yuzimi-editorial-preview-git-feat-yuzim-8e993c-jenozus-projects.vercel.app
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: editorial-screenshots
+          path: artifacts/editorial/*.png
+          if-no-files-found: ignore
