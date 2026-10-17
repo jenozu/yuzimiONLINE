@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test:editorial": "node --test tests/editorial-preview.test.mjs"
+    "test:editorial": "node --test tests/editorial-preview.test.mjs tests/no-emoji.test.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.908.0",

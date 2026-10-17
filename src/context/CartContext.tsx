@@ -123,7 +123,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         showToast("Removed from wishlist");
         return prev.filter((id) => id !== productId);
       } else {
-        showToast("Saved to wishlist 🌸");
+        showToast("Saved to wishlist");
         return [...prev, productId];
       }
     });

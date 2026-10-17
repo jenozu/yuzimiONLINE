@@ -20,7 +20,7 @@ jobs:
       - run: npm run build
         env:
           VITE_EDITORIAL_PREVIEW: 'true'
-      - run: node --test tests/editorial-preview.test.mjs tests/routing.test.mjs tests/checkout-flow.test.mjs
+      - run: node --test tests/no-emoji.test.mjs tests/editorial-preview.test.mjs tests/routing.test.mjs tests/checkout-flow.test.mjs
       - run: npx tsx --test tests/order-email.test.ts
   browser:
     runs-on: ubuntu-latest

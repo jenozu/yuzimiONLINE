@@ -11,7 +11,7 @@ export function Home(){
  const reduced=useReducedMotion();
  return <div className="overflow-hidden">
   <Hero featured={featured}/>
-  <div className="bg-charcoal text-white py-4 overflow-hidden"><div className="editorial-ticker flex gap-12 w-max font-black uppercase text-base sm:text-xl tracking-tight">{Array.from({length:8}).map((_,i)=><span key={i} className="flex gap-12 items-center">Art to live with <span className="text-cherry">✳</span> Pink skies, bold walls <span className="text-sky-blue">✳</span></span>)}</div></div>
+  <div className="bg-charcoal text-white py-4 overflow-hidden"><div className="editorial-ticker flex gap-12 w-max font-black uppercase text-base sm:text-xl tracking-tight">{Array.from({length:8}).map((_,i)=><span key={i} className="flex gap-12 items-center">Art to live with <span aria-hidden="true" className="w-2 h-2 rounded-full bg-cherry shrink-0"/> Pink skies, bold walls <span aria-hidden="true" className="w-2 h-2 rounded-full bg-sky-blue shrink-0"/></span>)}</div></div>
   <section id="discover" className="editorial-shell py-22 lg:py-34">
    <div className="editorial-rail editorial-eyebrow"><span>The print edit</span><span>Collection 001 / Cherry blossoms</span></div>
    <div className="grid lg:grid-cols-[1.15fr_.85fr] gap-10 lg:gap-24 mt-14">

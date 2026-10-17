@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { ArrowRight, Sparkles, Compass, Eye } from "lucide-react";
+import { ArrowRight, Sparkles, Compass, Eye, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { MOCK_PRODUCTS } from "../types";
 
@@ -98,7 +98,7 @@ export function Lookbook() {
                     </div>
 
                     <div className="absolute bottom-4 left-4 bg-white/95 border-2 border-charcoal px-3 py-1 text-[11px] font-black text-charcoal shadow-[2px_2px_0px_0px_#141414]">
-                      📍 {look.location}
+                      <MapPin size={14} aria-hidden="true" className="inline-block mr-1 align-middle" /> {look.location}
                     </div>
                   </div>
                 </div>
