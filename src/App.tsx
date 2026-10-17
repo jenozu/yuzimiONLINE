@@ -12,6 +12,7 @@ import { Legal } from "./pages/Legal";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Admin } from "./pages/Admin";
 import { Checkout } from "./pages/Checkout";
+import { PreviewCheckout } from "./pages/PreviewCheckout";
 import { CheckoutResult } from "./pages/CheckoutResult";
 import { CartProvider } from "./context/CartContext";
 
@@ -28,8 +29,8 @@ export default function App() {
             <Route path="privacy" element={<Legal />} />
             <Route path="terms" element={<Legal />} />
             <Route path="product/:id" element={<ProductDetail />} />
-            <Route path="checkout" element={<Checkout />} />
-            <Route path="checkout/success" element={<CheckoutResult />} />
+            <Route path="checkout" element={import.meta.env.VITE_EDITORIAL_PREVIEW === "true" ? <PreviewCheckout /> : <Checkout />} />
+            <Route path="checkout/success" element={import.meta.env.VITE_EDITORIAL_PREVIEW === "true" ? <PreviewCheckout /> : <CheckoutResult />} />
             <Route path="checkout/cancel" element={<CheckoutResult />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

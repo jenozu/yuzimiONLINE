@@ -49,6 +49,7 @@ function validEmail(value: string) {
 }
 
 export default async function checkout(req: VercelRequest, res: VercelResponse) {
+  if (process.env.YUZIMI_EDITORIAL_PREVIEW === "true") return res.status(403).json({ error: "Transactions and messages are disabled in the editorial preview." });
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST required.' });
   if (!allowCheckout(req)) return res.status(429).json({ error: 'Too many checkout attempts. Please wait a few minutes and try again.' });
 

@@ -38,6 +38,7 @@ function escapeHtml(value: string) {
 }
 
 export default async function supportContact(req: VercelRequest, res: VercelResponse) {
+  if (process.env.YUZIMI_EDITORIAL_PREVIEW === "true") return res.status(403).json({ error: "Transactions and messages are disabled in the editorial preview." });
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST required.' });
   if (!allow(req)) return res.status(429).json({ error: 'Too many messages. Please wait a few minutes and try again.' });
 

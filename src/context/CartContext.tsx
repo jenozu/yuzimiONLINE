@@ -55,7 +55,7 @@ function loadInitialCart(): CartItem[] {
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(loadInitialCart);
   const [isOpen, setIsOpen] = useState(false);
-  const [wishlist, setWishlist] = useState<string[]>(["1", "2"]);
+  const [wishlist, setWishlist] = useState<string[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 

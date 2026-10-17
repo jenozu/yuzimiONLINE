@@ -1,63 +1,27 @@
-import { motion } from "motion/react";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { useRef } from "react";
 import { Link } from "react-router-dom";
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import type { Product } from "../types";
+import sakura from "../assets/images/hero_sakura_sky_1779206360576.png";
 
-export function Hero() {
-  return (
-    <section className="relative pt-8 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[...Array(9)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-3.5 h-3.5 bg-cherry rounded-full border border-charcoal/20 opacity-40"
-            initial={{ y: -20, x: `${10 + i * 11}%`, rotate: 0, scale: 0.7 + (i % 3) * 0.2 }}
-            animate={{ y: 700, x: `+=${i % 2 === 0 ? 60 : -60}px`, rotate: 360 }}
-            transition={{ duration: 12 + (i % 4) * 3, repeat: Infinity, ease: "linear", delay: i * 1.2 }}
-          />
-        ))}
+export function Hero({ featured }: { featured?: Product }) {
+  const ref = useRef<HTMLElement>(null);
+  const reduced = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start","end start"] });
+  const imageY = useTransform(scrollYProgress,[0,1],[0,-65]);
+  return <motion.section ref={ref} className="relative bg-cherry overflow-hidden" aria-label="Cherry blossoms art collection">
+    <div className="editorial-shell pt-12 sm:pt-18 pb-12 lg:pb-24">
+      <div className="editorial-eyebrow flex justify-between gap-4 flex-wrap mb-10"><span>Collection 001 — Cherry Blossoms</span><span>Original art for your everyday / Est. 2026</span></div>
+      <div className="relative min-h-[650px] lg:min-h-[740px]">
+        <motion.h1 initial={reduced ? false : {opacity:0,y:45}} animate={{opacity:1,y:0}} transition={{duration:.85}} className="editorial-display relative z-20 text-[clamp(5rem,14.5vw,15rem)] pointer-events-none">MAKE<br/>ROOM <span className="text-white">FOR</span><br/>ART<span className="text-[.25em] align-top ml-3">*</span></motion.h1>
+        <motion.div style={reduced ? undefined : {y:imageY}} className="absolute z-10 top-[20%] right-[-7%] sm:right-[2%] lg:right-[7%] w-[56%] min-w-[230px] max-w-[570px] aspect-[3/4] rotate-[6deg]">
+          <div className="bg-white w-full h-full p-[5%] pb-[13%] editorial-paper"><img src={featured?.image || sakura} alt={featured ? featured.name : "Cherry blossom artwork from YUZIMI"} className="w-full h-full object-contain" fetchPriority="high"/></div>
+          <div className="absolute -bottom-5 -right-3 sm:-right-9 rounded-full bg-sky-blue border border-charcoal w-23 h-23 sm:w-30 sm:h-30 flex items-center justify-center rotate-[-17deg] text-center text-xs sm:text-sm font-black uppercase leading-tight">Art<br/>lives<br/>here ✳</div>
+        </motion.div>
+        <div className="absolute z-20 top-[52%] sm:top-[60%] left-0 max-w-[250px] sm:max-w-[375px]"><p className="text-base sm:text-xl font-semibold leading-snug mb-6">A little dramatic. A lot of feeling. Art prints that change the way a wall feels.</p><Link to="/collections" className="editorial-button">Explore the prints <ArrowUpRight size={18}/></Link></div>
+        <div className="absolute bottom-0 left-0 right-0 z-20 editorial-eyebrow flex justify-between items-end gap-3"><span>Sakura season, all year long.</span><a href="#discover" className="inline-flex items-center gap-2 hover:underline">Scroll to discover <ArrowDownRight size={17}/></a></div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 min-h-[520px] relative z-10">
-        <div className="bg-cherry border-3 border-charcoal p-8 sm:p-12 md:p-16 flex flex-col justify-center relative overflow-hidden shadow-brutal-large">
-          <div className="absolute -top-6 -right-6 w-28 h-28 bg-sky-blue border-3 border-charcoal rounded-full z-0 shadow-[4px_4px_0px_0px_#141414]"></div>
-          <div className="relative z-10 space-y-6">
-            <div className="flex items-center gap-3">
-              <span className="inline-block bg-charcoal text-white px-3 py-1 text-xs font-black uppercase tracking-widest border border-charcoal">Collection 001</span>
-              <span className="inline-flex items-center gap-1 bg-sky-blue text-charcoal border-2 border-charcoal px-2.5 py-0.5 text-[11px] font-black uppercase">
-                <Sparkles className="w-3 h-3 fill-charcoal" />
-                Cherry Blossoms
-              </span>
-            </div>
-
-            <h1 className="text-6xl sm:text-7xl md:text-8xl font-black uppercase leading-[0.88] tracking-tighter text-charcoal">
-              Vivid<br />Sakura<br />
-              <span className="bg-white text-charcoal px-3 py-0.5 border-3 border-charcoal inline-block mt-2 shadow-[4px_4px_0px_0px_#141414]">Art Prints</span>
-            </h1>
-
-            <p className="text-base sm:text-lg md:text-xl font-bold max-w-md leading-snug text-charcoal/85">
-              Bold anime-inspired wall art built around cherry blossom pinks, crisp sky blues, and dramatic graphic composition.
-            </p>
-
-            <Link
-              to="/collections"
-              className="w-fit bg-sky-blue text-charcoal border-3 border-charcoal px-8 py-4 font-black uppercase tracking-tight shadow-[4px_4px_0px_0px_#141414] hover:bg-white hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_#141414] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center gap-2 group text-base sm:text-lg cursor-pointer"
-            >
-              <span>Shop Art Prints</span>
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-        </div>
-
-        <div className="bg-white border-3 border-charcoal flex items-center justify-center shadow-[8px_8px_0px_0px_#FFB7C5] relative overflow-hidden min-h-[380px] p-6">
-          <div className="w-full h-full border-2 border-dashed border-charcoal/30 flex items-center justify-center -rotate-1 bg-[repeating-linear-gradient(45deg,#FFF0F4,#FFF0F4_12px,#ffffff_12px,#ffffff_24px)] p-4 relative">
-            <img
-              src="/src/assets/images/hero_sakura_sky_1779206360576.png"
-              alt="Cherry blossom artwork from the YUZIMI collection"
-              className="w-full h-full object-cover border-2 border-charcoal shadow-[4px_4px_0px_0px_#FFB7C5]"
-            />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+    </div>
+  </motion.section>;
 }

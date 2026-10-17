@@ -39,3 +39,26 @@
   }
   .animate-marquee { animation: marquee 22s linear infinite; }
 }
+
+/* Editorial evolution — preserves the original YUZIMI visual identity. */
+html { scroll-behavior:smooth; }
+body { overflow-x:clip; }
+:focus-visible { outline:3px solid #141414; outline-offset:3px; }
+button {cursor:pointer}
+.editorial-shell { width:min(100% - 2.5rem,1440px); margin-inline:auto; }
+.editorial-eyebrow {font-size:.65rem;letter-spacing:.22em;line-height:1.5;font-weight:850;text-transform:uppercase}
+.editorial-display {font-family:Inter,ui-sans-serif,sans-serif;font-weight:900;letter-spacing:-.082em;line-height:.84;text-transform:uppercase}
+.editorial-button {display:inline-flex;align-items:center;justify-content:center;gap:1rem;padding:1.15rem 1.55rem;background:#141414;color:white;font-size:.72rem;font-weight:850;letter-spacing:.07em;text-transform:uppercase;transition:transform .3s,background .3s,color .3s}
+.editorial-button:hover {background:#89CFF0;color:#141414;transform:translateY(-3px)}
+.editorial-image-wrap img {transition:transform .75s cubic-bezier(.2,.8,.2,1)}
+.editorial-image-wrap:hover img {transform:scale(1.05)}
+.editorial-grid-card:nth-child(4n+2) {margin-top:3.5rem}
+.editorial-grid-card:nth-child(4n+3) {margin-top:1.5rem}
+.editorial-input {width:100%;background:transparent;border:1px solid #141414;padding:1rem;font:inherit;border-radius:0}
+.editorial-ticker {white-space:nowrap;animation:editorial-ticker 27s linear infinite}
+@keyframes editorial-ticker {to {transform:translateX(-50%)}}
+.editorial-paper {background:white;box-shadow:0 18px 50px rgba(20,20,20,.16),0 2px 8px rgba(20,20,20,.06)}
+.editorial-rail {display:flex;align-items:center;justify-content:space-between;gap:1rem;border-top:1px solid rgba(20,20,20,.25);padding-top:1rem}
+.preview-banner {background:#141414;color:white;text-align:center;padding:.6rem 1rem;font-size:.65rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+@media(max-width:767px){.editorial-shell{width:min(100% - 1.5rem,1440px)}.editorial-grid-card:nth-child(n){margin-top:0}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}

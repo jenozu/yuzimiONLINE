@@ -1,70 +1,17 @@
-import { motion } from "motion/react";
 import { Link } from "react-router-dom";
-import { Plus } from "lucide-react";
-import { Product } from "../types";
-
-export interface ProductCardProps {
-  product: Product;
-  index?: number;
-  key?: string | number;
-}
-
-export function ProductCard({ product, index = 0 }: ProductCardProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.08, duration: 0.4 }}
-      className="group"
-    >
-      <Link to={`/product/${product.id}`} className="block">
-        <div className="card-brutal aspect-[4/5] relative mb-5">
-          <div className="w-full h-full p-3.5">
-            <div className="w-full h-full bg-[#FFF2F5] border-2 border-charcoal/15 overflow-hidden relative">
-              <img 
-                src={product.image} 
-                alt={product.name}
-                className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
-              />
-              <div className="absolute inset-0 bg-cherry/5 pointer-events-none group-hover:opacity-0 transition-opacity"></div>
-            </div>
-          </div>
-          
-          {product.badge && (
-            <div className="absolute top-4 right-4 z-10 rotate-2">
-              <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-wider border-2 border-charcoal shadow-[2px_2px_0px_0px_#141414] ${
-                product.badge === "New" 
-                  ? "bg-sky-blue text-charcoal" 
-                  : "bg-cherry text-charcoal"
-              }`}>
-                {product.badge}
-              </span>
-            </div>
-          )}
-          
-          <span 
-            aria-hidden="true"
-            className="absolute bottom-5 right-5 w-12 h-12 bg-cherry border-2 border-charcoal flex items-center justify-center shadow-[3px_3px_0px_0px_#141414] transition-all hover:bg-sky-blue hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[5px_5px_0px_0px_#141414] active:translate-x-0 active:translate-y-0 text-charcoal cursor-pointer z-10"
-          >
-            <Plus className="w-6 h-6 stroke-[2.5]" />
-          </span>
-        </div>
-        
-        <div className="space-y-1.5 px-1">
-          <div className="flex justify-between items-baseline gap-2">
-            <h3 className="text-xl font-black uppercase tracking-tighter leading-tight group-hover:text-cherry-dark transition-colors text-charcoal">
-              {product.name}
-            </h3>
-          </div>
-          <div className="flex justify-between items-center border-t-2 border-charcoal/30 pt-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/60">{["Prints", "Apparel", "Gear", "Home"].includes(product.category) ? product.name : product.category}</span>
-            <span className="text-lg font-black italic tracking-tighter bg-white px-2.5 py-0.5 border border-charcoal shadow-[2px_2px_0px_0px_#FFB7C5] text-charcoal">
-              ${Number.isInteger(product.price) ? product.price : product.price.toFixed(2)}+
-            </span>
-          </div>
-        </div>
-      </Link>
-    </motion.div>
-  );
+import { motion, useReducedMotion } from "motion/react";
+import { ArrowUpRight } from "lucide-react";
+import type { Product } from "../types";
+export interface ProductCardProps {product:Product;index?:number;key?:string|number}
+export function ProductCard({product,index=0}:ProductCardProps) {
+ const reduced=useReducedMotion();
+ return <motion.article initial={reduced?false:{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true,amount:.1}} transition={{duration:.55,delay:Math.min(index*.06,.24)}} className="editorial-grid-card group min-w-0">
+ <Link to={"/product/"+product.id} className="block" aria-label={"View "+product.name}>
+  <div className="editorial-image-wrap aspect-[4/5] bg-cherry-light group-hover:bg-sky-blue/20 p-[8%] relative transition-colors duration-500">
+   <span className="absolute top-4 left-4 editorial-eyebrow z-10">Art print / 00{index+1}</span>
+   <div className="bg-white p-[5%] shadow-[0_14px_30px_rgba(20,20,20,.12)] w-full h-full overflow-hidden">{product.image?<img src={product.image} alt={product.name} loading="lazy" className="object-contain w-full h-full"/>:<span className="h-full grid place-items-center font-semibold text-sm">Artwork unavailable</span>}</div>
+   <span aria-hidden className="absolute right-4 bottom-4 w-12 h-12 rounded-full bg-charcoal text-white group-hover:bg-sky-blue group-hover:text-charcoal grid place-items-center transition-colors"><ArrowUpRight size={20}/></span>
+  </div>
+  <div className="editorial-rail mt-5"><div className="min-w-0"><span className="editorial-eyebrow text-charcoal/60">{product.category}</span><h3 className="font-black uppercase tracking-[-.05em] text-lg sm:text-xl leading-tight mt-1">{product.name}</h3></div><span className="text-sm font-black whitespace-nowrap">From USD {product.price.toFixed(2)}</span></div>
+ </Link></motion.article>;
 }

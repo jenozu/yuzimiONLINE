@@ -27,6 +27,7 @@ export function Support() {
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (import.meta.env.VITE_EDITORIAL_PREVIEW === "true") { setFormError("Contact messages are disabled in this design preview. Visit the production website for support."); return; }
     setFormSubmitting(true);
     setFormError("");
     try {

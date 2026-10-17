@@ -138,7 +138,7 @@ export function Checkout() {
               colorText: "#141414",
               colorBackground: "#ffffff",
               borderRadius: "0px",
-              fontFamily: "Arial, sans-serif",
+              fontFamily: "Inter, sans-serif",
             },
           },
         });
@@ -279,18 +279,18 @@ export function Checkout() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+    <div className="editorial-shell py-12 lg:py-22">
       <Link to="/collections" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-charcoal/60 hover:text-charcoal mb-8">
         <ArrowLeft className="w-4 h-4" />
         Continue shopping
       </Link>
 
-      <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-8 lg:gap-12 items-start">
-        <section className="bg-white border-3 border-charcoal shadow-[6px_6px_0px_0px_#FFB7C5] p-5 sm:p-8">
+      <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-10 lg:gap-16 items-start">
+        <section className="bg-white border border-charcoal/25 p-6 sm:p-10">
           <div className="flex items-center justify-between gap-4 mb-8">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cherry-dark">Secure checkout</p>
-              <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-charcoal mt-1">
+              <h1 className="editorial-display text-4xl sm:text-5xl mt-3">
                 {step === "details" ? "Shipping details" : "Payment"}
               </h1>
             </div>
@@ -360,7 +360,7 @@ export function Checkout() {
 
               {error && <p role="alert" className="text-sm font-bold text-red-700">{error}</p>}
 
-              <button type="submit" disabled={startingPayment} className="w-full btn-brutal py-4 text-sm disabled:opacity-60">
+              <button type="submit" disabled={startingPayment} className="editorial-button w-full py-5 disabled:opacity-60">
                 {startingPayment ? "Preparing secure payment…" : "Continue to payment"}
               </button>
               <p className="text-xs text-center text-charcoal/60 font-semibold">Test mode: no real money will be charged.</p>
@@ -401,7 +401,7 @@ export function Checkout() {
           )}
         </section>
 
-        <aside className="bg-[#FFF9FA] border-3 border-charcoal p-5 sm:p-6 lg:sticky lg:top-28">
+        <aside className="bg-cherry-light border border-charcoal/25 p-6 sm:p-9 lg:sticky lg:top-36">
           <h2 className="text-sm font-black uppercase tracking-[0.2em] text-charcoal mb-5">Order summary</h2>
           <div className="space-y-4">
             {items.map(item => (

@@ -275,6 +275,7 @@ function normalizeProduct(input: any) {
 export const config = { api: { bodyParser: false } };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (process.env.YUZIMI_EDITORIAL_PREVIEW === "true") return res.status(403).json({ error: "Admin and write APIs are disabled in the editorial preview." });
   try {
     const path = Array.isArray(req.query.path) ? req.query.path : typeof req.query.path === 'string' ? req.query.path.split('/') : [];
     const route = path.join('/');

@@ -1,221 +1,61 @@
-import { useParams, Link } from "react-router-dom";
+import { useEffect,useState } from "react";
+import { Link,useParams } from "react-router-dom";
+import { AnimatePresence,motion,useReducedMotion } from "motion/react";
+import { ArrowLeft,ArrowUpRight,ChevronLeft,ChevronRight,Expand,Plus,Share2,Truck,X } from "lucide-react";
 import { useProducts } from "../hooks/useProducts";
-import { motion } from "motion/react";
-import { Star, ArrowLeft, Heart, Share2, ShieldCheck, Truck, PackageCheck } from "lucide-react";
-import { useState } from "react";
 import { useCart } from "../context/CartContext";
-
-const PRINT_SIZES = [
-  "8 × 10 in",
-  "11 × 14 in",
-  "12 × 18 in",
-  "16 × 20 in",
-  "18 × 24 in",
-  "20 × 30 in",
-  "24 × 32 in",
-  "24 × 36 in",
-] as const;
-
-export function ProductDetail() {
-  const { id } = useParams();
-  const { products, loading } = useProducts();
-  const product = products.find(p => p.id === id);
-  const [selectedSize, setSelectedSize] = useState<(typeof PRINT_SIZES)[number]>(PRINT_SIZES[0]);
-  const { addToCart, openCart, toggleWishlist, isWishlisted, showToast } = useCart();
-  const selectedVariant = product?.variants?.find((variant) => variant.size === selectedSize);
-  const selectedPrice = selectedVariant?.price ?? product?.price ?? 0;
-
-  const galleryImages = product?.additionalImages && product.additionalImages.length > 0
-    ? product.additionalImages
-    : product ? [product.image, product.image, product.image, product.image] : [];
-
-  const [activeImage, setActiveImage] = useState(product?.image || "");
-
-  if (loading) {
-    return <div className="max-w-4xl mx-auto px-4 py-24 text-center font-black uppercase tracking-widest">Loading product…</div>;
-  }
-
-  if (!product) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-24 text-center space-y-6">
-        <h2 className="text-4xl font-black uppercase text-charcoal">Unit Not Found</h2>
-        <p className="text-sm font-semibold text-charcoal/60">
-          The requested item code does not exist in the active catalog.
-        </p>
-        <Link to="/collections" className="inline-block btn-brutal text-xs py-3 px-6">
-          Return to Collections
-        </Link>
-      </div>
-    );
-  }
-
-  const handleAddToCart = () => {
-    addToCart({ ...product, price: selectedPrice }, selectedSize);
-    openCart();
-  };
-
-  const handleShare = () => {
-    navigator.clipboard?.writeText(window.location.href);
-    showToast("Product link copied to clipboard 🌸");
-  };
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-      <div className="flex justify-between items-center mb-12">
-        <Link 
-          to="/collections" 
-          className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest hover:text-cherry-dark transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Collections
-        </Link>
-
-        <button
-          onClick={handleShare}
-          className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-charcoal/70 hover:text-charcoal bg-white border-2 border-charcoal px-3 py-1.5 shadow-[2px_2px_0px_0px_#141414] active:shadow-none"
-        >
-          <Share2 className="w-3.5 h-3.5" />
-          <span>Share Spec</span>
-        </button>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-20">
-        {/* Gallery */}
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="space-y-6"
-        >
-          <div className="card-brutal aspect-[4/5] bg-white p-6 shadow-[8px_8px_0px_0px_#FFB7C5]">
-            <div className="w-full h-full bg-[#FFF0F4] border-2 border-dashed border-charcoal/20 overflow-hidden relative">
-              <img 
-                src={activeImage || product.image} 
-                alt={product.name}
-                className="w-full h-full object-cover transition-all duration-300"
-              />
-              <div className="absolute top-4 left-4">
-                <span className="bg-cherry text-charcoal border-2 border-charcoal px-2.5 py-1 text-[11px] font-black uppercase shadow-[2px_2px_0px_0px_#141414]">
-                  🌸 Sakura Spec // <span className="normal-case"><span className="lowercase">yuzimi</span>ONLINE</span>
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-4 gap-4">
-            {galleryImages.map((img, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setActiveImage(img)}
-                aria-label={`View photo ${i + 1}`}
-                className={`card-brutal aspect-square p-2 transition-all cursor-pointer ${
-                  (activeImage || product.image) === img 
-                    ? "border-cherry shadow-[4px_4px_0px_0px_#FFB7C5] scale-102" 
-                    : "opacity-70 hover:opacity-100 hover:border-cherry"
-                }`}
-              >
-                <div className="w-full h-full bg-[#FFF0F4] overflow-hidden">
-                  <img 
-                    src={img} 
-                    alt="" 
-                    className="w-full h-full object-cover" 
-                  />
-                </div>
-              </button>
-            ))}
-          </div>
-        </motion.div>
-        
-        {/* Details */}
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="space-y-10"
-        >
-          <div className="space-y-6">
-            <div className="flex items-center gap-4">
-              <span className="badge-brutal bg-cherry text-charcoal">{product.category}</span>
-              <div className="flex items-center gap-1.5 bg-white border border-charcoal px-2.5 py-1 shadow-[2px_2px_0px_0px_#89CFF0]">
-                <Star className="w-4 h-4 text-sky-blue fill-sky-blue" />
-                <span className="text-xs font-black text-charcoal">4.9 / 5.0 (Tokyo Spec)</span>
-              </div>
-            </div>
-            
-            <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-[0.88] text-charcoal">
-              {product.name}
-            </h1>
-            
-            <div className="inline-block bg-cherry text-charcoal border-3 border-charcoal px-6 py-2.5 text-2xl md:text-3xl font-black italic shadow-[4px_4px_0px_0px_#141414]">
-              ${selectedPrice.toFixed(2)}
-            </div>
-          </div>
-          
-          <p className="text-charcoal/85 font-semibold leading-relaxed text-lg max-w-lg">
-            {product.description}
-          </p>
-          
-          <div className="space-y-8 border-t-3 border-charcoal pt-8">
-            <div className="space-y-3">
-              <div className="flex justify-between items-center gap-4">
-                <span className="text-xs font-black uppercase tracking-[0.2em] text-charcoal/60">Select Print Size</span>
-                <span className="text-[11px] font-bold text-charcoal/50 text-right">Fine-art print dimensions</span>
-              </div>
-              <div className="grid grid-cols-4 gap-2 sm:gap-3">
-                {PRINT_SIZES.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    aria-label={`${size}, ${(product.variants?.find((variant) => variant.size === size)?.price ?? product.price).toFixed(2)} dollars`}
-                    className={`min-w-0 min-h-12 px-1.5 py-2 border-3 border-charcoal text-[10px] sm:text-xs font-black leading-tight flex items-center justify-center text-center transition-all cursor-pointer ${
-                      selectedSize === size 
-                        ? "bg-cherry text-charcoal translate-x-0.5 translate-y-0.5 shadow-[2px_2px_0px_0px_#141414]" 
-                        : "bg-white text-charcoal hover:bg-cherry/30 shadow-[4px_4px_0px_0px_#141414] active:shadow-none"
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="flex gap-4 pt-2">
-              <button 
-                onClick={handleAddToCart}
-                className="btn-brutal flex-grow text-xl py-5 hover:bg-sky-blue transition-colors cursor-pointer"
-              >
-                Add to Cart
-              </button>
-              <button 
-                onClick={() => toggleWishlist(product.id)}
-                aria-label="Save to wishlist"
-                className={`w-20 h-20 border-3 border-charcoal flex items-center justify-center transition-colors shadow-[4px_4px_0px_0px_#141414] active:shadow-none cursor-pointer ${
-                  isWishlisted(product.id) ? "bg-cherry text-charcoal" : "bg-white hover:bg-cherry/40"
-                }`}
-              >
-                <Heart className={`w-7 h-7 ${isWishlisted(product.id) ? "fill-charcoal text-charcoal" : "text-charcoal"}`} />
-              </button>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-2 sm:gap-5 pt-8 border-t-3 border-dashed border-charcoal/20">
-            <div className="p-3 sm:p-5 border-3 border-charcoal bg-[#FFF2F5] shadow-[3px_3px_0px_0px_#FFB7C5]">
-              <Truck className="w-5 h-5 mb-2" aria-hidden="true" />
-              <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wide sm:tracking-widest mb-1 text-charcoal">Free U.S. Shipping</p>
-              <p className="text-[10px] sm:text-xs leading-snug text-charcoal/70 font-semibold">Every U.S. order, no minimum.</p>
-            </div>
-            <div className="p-3 sm:p-5 border-3 border-charcoal bg-[#EEF8FD] shadow-[3px_3px_0px_0px_#89CFF0]">
-              <ShieldCheck className="w-5 h-5 mb-2" aria-hidden="true" />
-              <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wide sm:tracking-widest mb-1 text-charcoal">Secure Checkout</p>
-              <p className="text-[10px] sm:text-xs leading-snug text-charcoal/70 font-semibold">Your payment details stay protected.</p>
-            </div>
-            <div className="p-3 sm:p-5 border-3 border-charcoal bg-white shadow-[3px_3px_0px_0px_#141414]">
-              <PackageCheck className="w-5 h-5 mb-2" aria-hidden="true" />
-              <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wide sm:tracking-widest mb-1 text-charcoal">Quality Prints</p>
-              <p className="text-[10px] sm:text-xs leading-snug text-charcoal/70 font-semibold">Carefully printed and packed for you.</p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
+import { PrintSizeVisualizer } from "../components/PrintSizeVisualizer";
+import { ProductCard } from "../components/ProductCard";
+const PRINT_SIZES=["8 × 10 in","11 × 14 in","12 × 18 in","16 × 20 in","18 × 24 in","20 × 30 in","24 × 32 in","24 × 36 in"] as const;
+export function ProductDetail(){
+ const {id}=useParams();
+ const {products,loading,error}=useProducts();
+ const product=products.find(p=>p.id===id);
+ const {addToCart,openCart,showToast}=useCart();
+ const [size,setSize]=useState<string>(PRINT_SIZES[0]);
+ const [active,setActive]=useState(0);
+ const [zoom,setZoom]=useState(false);
+ const reduced=useReducedMotion();
+ useEffect(()=>{setSize(PRINT_SIZES[0]);setActive(0);setZoom(false)},[id]);
+ useEffect(()=>{if(!zoom)return;const close=(e:KeyboardEvent)=>{if(e.key==="Escape")setZoom(false)};window.addEventListener("keydown",close);return()=>window.removeEventListener("keydown",close)},[zoom]);
+ if(loading)return <div className="editorial-shell py-28 font-black uppercase" aria-live="polite">Preparing artwork...</div>;
+ if(error)return <div className="editorial-shell py-24" role="alert">Could not load artwork: {error}</div>;
+ if(!product)return <div className="editorial-shell py-24"><h1 className="editorial-display text-5xl mb-8">Artwork not found</h1><Link to="/collections" className="editorial-button">Back to prints</Link></div>;
+ const gallery=Array.from(new Set([product.image,...(product.additionalImages||[])].filter(Boolean)));
+ const image=gallery[Math.min(active,gallery.length-1)]||product.image;
+ const variant=product.variants?.find(v=>v.size===size);
+ const price=variant?.price;
+ const change=(delta:number)=>setActive(v=>(v+delta+gallery.length)%gallery.length);
+ const add=()=>{if(price===undefined)return;addToCart({...product,price},size);openCart()};
+ const share=async()=>{try{await navigator.clipboard.writeText(window.location.href);showToast("Artwork link copied")}catch{showToast("Unable to copy link")}};
+ return <div className="pb-26">
+  <div className="editorial-shell pt-8 pb-8 flex items-center justify-between gap-3"><Link to="/collections" className="editorial-eyebrow inline-flex items-center gap-2 hover:underline"><ArrowLeft size={16}/> Back to collection</Link><button onClick={share} className="editorial-eyebrow inline-flex items-center gap-2 hover:underline"><Share2 size={16}/> Share art</button></div>
+  <div className="editorial-shell grid lg:grid-cols-[minmax(0,1.2fr)_minmax(350px,.8fr)] gap-10 xl:gap-20">
+   <div className="min-w-0">
+    <div className="relative bg-cherry-light aspect-[4/5] p-[8%] sm:p-[10%]">
+      <AnimatePresence mode="wait"><motion.div key={image} initial={reduced?false:{opacity:0,scale:.97}} animate={{opacity:1,scale:1}} exit={{opacity:0}} transition={{duration:.3}} className="bg-white editorial-paper w-full h-full p-[4%]"><img src={image} alt={product.name} className="w-full h-full object-contain"/></motion.div></AnimatePresence>
+      <button onClick={()=>setZoom(true)} className="absolute top-5 right-5 bg-white border border-charcoal p-3 hover:bg-sky-blue transition-colors" aria-label="Enlarge artwork"><Expand size={18}/></button>
+      {gallery.length>1&&<div className="absolute bottom-5 right-5 flex gap-2"><button onClick={()=>change(-1)} className="bg-white p-3 border border-charcoal" aria-label="Previous image"><ChevronLeft size={19}/></button><button onClick={()=>change(1)} className="bg-white p-3 border border-charcoal" aria-label="Next image"><ChevronRight size={19}/></button></div>}
+      <span className="absolute bottom-5 left-5 editorial-eyebrow">{String(active+1).padStart(2,"0")} / {String(gallery.length).padStart(2,"0")}</span>
     </div>
-  );
+    {gallery.length>1&&<div className="flex gap-3 mt-4 overflow-x-auto pb-3">{gallery.map((src,i)=><button key={i} onClick={()=>setActive(i)} aria-label={"View artwork image "+(i+1)} aria-pressed={i===active} className={["shrink-0 bg-white p-1.5 border-2 w-22 h-26 sm:w-26 sm:h-30 transition-opacity",i===active?"border-charcoal":"border-transparent opacity-60 hover:opacity-100"].join(" ")}><img src={src} alt="" className="w-full h-full object-contain"/></button>)}</div>}
+   </div>
+   <div className="lg:sticky lg:top-30 self-start">
+    <p className="editorial-eyebrow mb-5">{product.category} / the artwork</p>
+    <h1 className="editorial-display text-[clamp(3.8rem,6vw,7.5rem)] break-words">{product.name}</h1>
+    <div className="editorial-rail mt-8"><span className="editorial-eyebrow">Selected print / USD</span><span aria-live="polite" className="text-2xl sm:text-3xl font-black">{price===undefined?"Unavailable":"$"+price.toFixed(2)}</span></div>
+    <p className="text-base sm:text-lg leading-relaxed font-medium mt-7 whitespace-pre-line">{product.description}</p>
+    <div className="border-t border-charcoal/25 mt-9 pt-7">
+      <div className="flex justify-between gap-3 items-end mb-4"><h2 className="editorial-eyebrow">01 / Choose print dimensions</h2><span className="editorial-eyebrow text-charcoal/55">{size}</span></div>
+      <div className="grid grid-cols-4 gap-2">{PRINT_SIZES.map(s=>{const v=product.variants?.find(item=>item.size===s);return <button key={s} onClick={()=>setSize(s)} disabled={!v} aria-pressed={size===s} aria-label={s+(v?" for $"+v.price.toFixed(2):" unavailable")} className={["min-h-16 sm:min-h-18 p-1 border text-[10px] sm:text-xs font-black leading-tight transition-colors",size===s?"bg-cherry border-charcoal":"bg-white border-charcoal/25 hover:border-charcoal",!v?"opacity-40 cursor-not-allowed":""].join(" ")}>{s.replace(" in","")}<span className="block font-medium mt-1">inches</span></button>})}</div>
+      <p className="text-xs font-medium text-charcoal/65 mt-4">Prices update with your selected size. Artwork is sold as a print.</p>
+      <button onClick={add} disabled={price===undefined} className="editorial-button w-full mt-7 !py-5 disabled:opacity-40 disabled:cursor-not-allowed">Add to cart — {price===undefined?"Unavailable":"$"+price.toFixed(2)} <Plus size={19}/></button>
+      <div className="flex items-center justify-between gap-3 border-b border-charcoal/20 py-5"><span className="flex items-center gap-2 editorial-eyebrow"><Truck size={17}/> Standard shipping</span><Link to="/support?tab=shipping" className="text-xs font-semibold underline underline-offset-4">View shipping policy</Link></div>
+    </div>
+    <div className="mt-8"><PrintSizeVisualizer size={size} image={product.image} name={product.name}/></div>
+   </div>
+  </div>
+  {products.length>1&&<section className="editorial-shell mt-28"><div className="flex justify-between items-end gap-4 mb-12"><div><p className="editorial-eyebrow mb-4">Continue exploring</p><h2 className="editorial-display text-[clamp(3.5rem,7vw,7rem)]">MORE TO LOVE.</h2></div><Link to="/collections" className="editorial-eyebrow flex gap-2 items-center">All prints <ArrowUpRight size={16}/></Link></div><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-9">{products.filter(p=>p.id!==id).slice(0,3).map((p,i)=><ProductCard key={p.id} product={p} index={i}/>)}</div></section>}
+  <AnimatePresence>{zoom&&<motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} role="dialog" aria-modal="true" aria-label="Enlarged artwork" className="fixed inset-0 z-[100] bg-charcoal/95 flex flex-col p-4 sm:p-10"><div className="flex items-center justify-between text-white pb-4 gap-5"><span className="editorial-eyebrow">{product.name}</span><button onClick={()=>setZoom(false)} aria-label="Close enlarged artwork" className="p-3 border border-white/30"><X size={23}/></button></div><img src={image} alt={product.name} className="flex-1 w-full min-h-0 object-contain"/></motion.div>}</AnimatePresence>
+ </div>;
 }

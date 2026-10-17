@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureOrdersTable, markPaid, markPaymentIntentPaid, ordersDb } from '../lib/checkout/orders.js';
 
 export default async function status(req: VercelRequest, res: VercelResponse) {
+  if (process.env.YUZIMI_EDITORIAL_PREVIEW === "true") return res.status(403).json({ error: "Transactions and messages are disabled in the editorial preview." });
   if (req.method !== 'GET') return res.status(405).end();
   if (!process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_')) {
     return res.status(503).json({ error: 'Stripe test checkout is not configured.' });
